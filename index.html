@@ -1019,6 +1019,53 @@
 
   #avatarMenu { animation: fadeIn 0.12s ease; }
   @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
+
+  .group-sub-tab {
+    background: transparent; border: none; color: var(--muted);
+    font-family: Outfit, sans-serif; font-size: 13px; font-weight: 600;
+    padding: 8px 16px; border-radius: 9px; cursor: pointer; transition: all 0.15s;
+  }
+  .group-sub-tab.active { background: var(--card); color: var(--text); }
+  .grp-period-btn {
+    background: var(--card); border: 1px solid var(--border2); color: var(--muted);
+    font-family: Outfit, sans-serif; font-size: 12px; font-weight: 600;
+    padding: 6px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s;
+  }
+  .grp-period-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
+  .grp-member-row {
+    display: flex; align-items: center; gap: 16px;
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 16px 20px; margin-bottom: 10px;
+  }
+  .grp-avatar {
+    width: 40px; height: 40px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: Outfit, sans-serif; font-weight: 700; font-size: 16px; color: #000; flex-shrink: 0;
+  }
+  .grp-rank { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--muted); width: 24px; flex-shrink: 0; }
+  .grp-member-info { flex: 1; }
+  .grp-member-name { font-family: Outfit, sans-serif; font-size: 14px; font-weight: 600; }
+  .grp-member-sub { font-family: Outfit, sans-serif; font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .grp-member-pnl { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 700; }
+  .grp-streak { font-family: Outfit, sans-serif; font-size: 12px; color: var(--muted); }
+  .grp-feed-item {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 14px 18px;
+    font-family: Outfit, sans-serif; font-size: 13px;
+  }
+  .grp-feed-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 4px; }
+  .grp-rule-row {
+    background: var(--card); border: 1px solid var(--border2);
+    border-radius: 14px; padding: 18px 20px; margin-bottom: 10px;
+  }
+  .grp-rule-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .grp-rule-name { font-family: Outfit, sans-serif; font-size: 14px; font-weight: 700; }
+  .grp-rule-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .grp-rule-stat { text-align: center; }
+  .grp-rule-stat-val { font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 700; }
+  .grp-rule-stat-lbl { font-family: Outfit, sans-serif; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .grp-compliance-bar { height: 4px; border-radius: 2px; background: var(--border2); margin-top: 12px; overflow: hidden; }
+  .grp-compliance-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
 </style>
 </head>
 <body>
@@ -1121,6 +1168,7 @@
     <button class="tab" onclick="switchTab('setups',this)">Setup Report</button>
     <button class="tab" onclick="switchTab('history',this)">History</button>
     <button class="tab" onclick="switchTab('calendar',this)">Calendar</button>
+    <button class="tab" onclick="switchTab('group',this)" id="groupTabBtn">Group</button>
   </div>
 
   <!-- ▸ DASHBOARD ────────────────────────────────── -->
@@ -1779,11 +1827,441 @@
       <button class="btn-cancel" onclick="closeModal()">Cancel</button>
       <button class="btn-primary" onclick="saveTrade()">Save Trade</button>
     </div>
+
+  <!-- GROUP TAB -->
+  <div id="tab-group" class="tab-content">
+
+    <!-- No group state -->
+    <div id="groupLoading" style="text-align:center;padding:60px;font-family:Outfit,sans-serif;font-size:13px;color:var(--muted)">Loading…</div>
+    <div id="groupNoGroup" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:700px;margin:40px auto">
+        <div class="card" style="text-align:center;padding:36px 28px">
+          <div style="font-size:32px;margin-bottom:12px">🏆</div>
+          <div class="card-title" style="justify-content:center;margin-bottom:8px">Create Group</div>
+          <div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Start a new group and invite your trading partners</div>
+          <input id="groupNameInput" placeholder="Group name…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+          <button onclick="createGroup()" style="width:100%;background:var(--accent);color:#000;border:none;padding:11px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Create</button>
+        </div>
+        <div class="card" style="text-align:center;padding:36px 28px">
+          <div style="font-size:32px;margin-bottom:12px">🔗</div>
+          <div class="card-title" style="justify-content:center;margin-bottom:8px">Join Group</div>
+          <div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.5">Enter an invite code to join an existing group</div>
+          <input id="groupInviteInput" placeholder="Invite code…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none;box-sizing:border-box;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+          <button onclick="joinGroup()" style="width:100%;background:var(--card);color:var(--text);border:1px solid var(--border2);padding:11px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Join</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rules modal -->
+    <div id="groupRulesModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center">
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:36px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+        <div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">Your Trading Rules</div>
+        <div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted);margin-bottom:24px">Define your risk parameters for this group</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">R Value ($)</label>
+            <input id="ruleRValue" type="number" value="100" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+            <div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);margin-top:4px">How much $ = 1R</div>
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Max Trades / Day</label>
+            <input id="ruleMaxTrades" type="number" value="3" min="1" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Daily Gain Target (R)</label>
+            <input id="ruleGainTarget" type="number" value="2" min="0.1" step="0.1" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Max Daily Loss (R)</label>
+            <input id="ruleMaxLoss" type="number" value="1.5" min="0.1" step="0.1" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:'DM Mono',monospace;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+          </div>
+        </div>
+        <button onclick="saveGroupRules()" style="width:100%;background:var(--accent);color:#000;border:none;padding:12px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Save &amp; Enter Group</button>
+      </div>
+    </div>
+
+    <!-- Group dashboard -->
+    <div id="groupDashboard" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+        <div>
+          <div style="font-family:Outfit,sans-serif;font-size:20px;font-weight:700" id="groupNameLabel"></div>
+          <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-top:2px">Invite code: <span id="groupInviteCode" style="color:var(--accent);letter-spacing:1px;cursor:pointer" onclick="copyInviteCode()" title="Click to copy">—</span></div>
+        </div>
+        <button onclick="openGroupRulesEdit()" style="background:var(--card);color:var(--text2);border:1px solid var(--border2);padding:8px 16px;border-radius:10px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer">⚙ My Rules</button>
+      </div>
+
+      <div style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:12px;width:fit-content">
+        <button class="group-sub-tab active" onclick="switchGroupTab('leaderboard',this)">🏆 Leaderboard</button>
+        <button class="group-sub-tab" onclick="switchGroupTab('feed',this)">📡 Feed</button>
+        <button class="group-sub-tab" onclick="switchGroupTab('setups',this)">📊 Setups</button>
+        <button class="group-sub-tab" onclick="switchGroupTab('rules',this)">📋 Rules</button>
+      </div>
+
+      <div id="grp-leaderboard" class="grp-panel">
+        <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+          <button class="grp-period-btn active" onclick="setGroupPeriod('today',this)">Today</button>
+          <button class="grp-period-btn" onclick="setGroupPeriod('week',this)">Week</button>
+          <button class="grp-period-btn" onclick="setGroupPeriod('month',this)">Month</button>
+          <button class="grp-period-btn" onclick="setGroupPeriod('all',this)">All Time</button>
+        </div>
+        <div id="grpLeaderboardList"></div>
+      </div>
+
+      <div id="grp-feed" class="grp-panel" style="display:none">
+        <div id="grpFeedList" style="display:flex;flex-direction:column;gap:10px"></div>
+      </div>
+
+      <div id="grp-setups" class="grp-panel" style="display:none">
+        <div id="grpSetupsContent"></div>
+      </div>
+
+      <div id="grp-rules" class="grp-panel" style="display:none">
+        <div id="grpRulesList"></div>
+      </div>
+    </div>
+  </div>
+
   </div>
 </div>
 
 <script>
 
+
+
+// ─────────────── GROUP SYSTEM ──────────────────────────────────
+let currentGroup = null;
+let currentMember = null;
+let groupMembers = [];
+let groupTrades = [];
+let groupPeriod = 'today';
+let pendingGroupId = null;
+let realtimeWS = null;
+
+const GROUP_COLORS = ['#00d68f','#4da8ff','#f5c842','#f0435a','#a78bfa','#fb923c','#34d399'];
+function getInitial(email) { return email ? email[0].toUpperCase() : '?'; }
+function getMemberColor(idx) { return GROUP_COLORS[idx % GROUP_COLORS.length]; }
+
+async function loadGroup() {
+  document.getElementById('groupLoading').style.display = 'block';
+  document.getElementById('groupNoGroup').style.display = 'none';
+  document.getElementById('groupDashboard').style.display = 'none';
+  try {
+    const token = localStorage.getItem('galt_token') || SUPABASE_KEY;
+    const res = await fetch(SUPABASE_URL + '/rest/v1/group_members?user_id=eq.' + currentUser.id + '&select=*,groups(*)', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    document.getElementById('groupLoading').style.display = 'none';
+    if (data && data.length && data[0].groups) {
+      currentMember = data[0];
+      currentGroup  = data[0].groups;
+      showGroupDashboard();
+    } else {
+      document.getElementById('groupNoGroup').style.display = 'block';
+      document.getElementById('groupDashboard').style.display = 'none';
+    }
+  } catch(e) {
+    console.warn('Group load error:', e);
+    document.getElementById('groupLoading').style.display = 'none';
+    document.getElementById('groupNoGroup').style.display = 'block';
+  }
+}
+
+async function createGroup() {
+  const name = document.getElementById('groupNameInput').value.trim();
+  if (!name) { alert('Enter a group name.'); return; }
+  const inviteCode = Math.random().toString(36).substring(2,8).toUpperCase();
+  try {
+    const rows = await sbFetch('groups', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ name, invite_code: inviteCode, created_by: currentUser.id })
+    });
+    pendingGroupId = rows[0].id;
+    document.getElementById('groupRulesModal').style.display = 'flex';
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function joinGroup() {
+  const code = document.getElementById('groupInviteInput').value.trim().toUpperCase();
+  if (!code) { alert('Enter an invite code.'); return; }
+  try {
+    const rows = await sbFetch('groups?invite_code=eq.' + code);
+    if (!rows.length) { alert('Invalid invite code.'); return; }
+    pendingGroupId = rows[0].id;
+    document.getElementById('groupRulesModal').style.display = 'flex';
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+async function saveGroupRules() {
+  const r    = parseFloat(document.getElementById('ruleRValue').value) || 100;
+  const gain = parseFloat(document.getElementById('ruleGainTarget').value) || 2;
+  const loss = parseFloat(document.getElementById('ruleMaxLoss').value) || 1.5;
+  const maxT = parseInt(document.getElementById('ruleMaxTrades').value) || 3;
+  try {
+    const rows = await sbFetch('group_members', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ group_id: pendingGroupId, user_id: currentUser.id, r_value: r, gain_target: gain, max_loss: loss, max_trades: maxT })
+    });
+    currentMember = rows[0];
+    const token = localStorage.getItem('galt_token') || SUPABASE_KEY;
+    const res = await fetch(SUPABASE_URL + '/rest/v1/group_members?user_id=eq.' + currentUser.id + '&select=*,groups(*)', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
+    });
+    const data = await res.json();
+    currentGroup = data[0].groups;
+    currentMember = data[0];
+    document.getElementById('groupRulesModal').style.display = 'none';
+    showGroupDashboard();
+  } catch(e) { alert('Error saving rules: ' + e.message); }
+}
+
+async function openGroupRulesEdit() {
+  if (currentMember) {
+    document.getElementById('ruleRValue').value    = currentMember.r_value;
+    document.getElementById('ruleGainTarget').value = currentMember.gain_target;
+    document.getElementById('ruleMaxLoss').value   = currentMember.max_loss;
+    document.getElementById('ruleMaxTrades').value = currentMember.max_trades;
+  }
+  pendingGroupId = currentGroup.id;
+  document.getElementById('groupRulesModal').style.display = 'flex';
+}
+
+async function showGroupDashboard() {
+  document.getElementById('groupNoGroup').style.display = 'none';
+  document.getElementById('groupDashboard').style.display = 'block';
+  document.getElementById('groupNameLabel').textContent  = currentGroup.name;
+  document.getElementById('groupInviteCode').textContent = currentGroup.invite_code;
+  await refreshGroupData();
+  setupGroupRealtime();
+}
+
+async function refreshGroupData() {
+  const token = localStorage.getItem('galt_token') || SUPABASE_KEY;
+  const mRes = await fetch(SUPABASE_URL + '/rest/v1/group_members?group_id=eq.' + currentGroup.id, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
+  });
+  groupMembers = await mRes.json();
+  const userIds = groupMembers.map(m => m.user_id).join(',');
+  if (!userIds) return;
+  const tRes = await fetch(SUPABASE_URL + '/rest/v1/trades?user_id=in.(' + userIds + ')&order=datetime.desc&limit=2000', {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
+  });
+  groupTrades = await tRes.json();
+  renderGroupLeaderboard();
+  renderGroupFeed();
+  renderGroupSetups();
+  renderGroupRules();
+}
+
+function getGroupPeriodTrades(userId) {
+  const now = new Date();
+  return groupTrades.filter(t => {
+    if (userId && t.user_id !== userId) return false;
+    const d = new Date(t.datetime);
+    if (groupPeriod === 'today')  return d.toDateString() === now.toDateString();
+    if (groupPeriod === 'week')   { const s = new Date(now); s.setDate(now.getDate()-now.getDay()); s.setHours(0,0,0,0); return d >= s; }
+    if (groupPeriod === 'month')  return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear();
+    return true;
+  });
+}
+
+function calcStreak(userId) {
+  const member = groupMembers.find(m => m.user_id === userId);
+  if (!member) return 0;
+  const byDay = {};
+  groupTrades.filter(t => t.user_id === userId).forEach(t => {
+    const d = new Date(t.datetime).toDateString();
+    if (!byDay[d]) byDay[d] = 0;
+    byDay[d] += parseFloat(t.net)||0;
+  });
+  const days = Object.keys(byDay).sort((a,b) => new Date(b)-new Date(a));
+  let streak = 0;
+  for (const day of days) {
+    if ((byDay[day] / member.r_value) >= -member.max_loss) streak++;
+    else break;
+  }
+  return streak;
+}
+
+function renderGroupLeaderboard() {
+  const el = document.getElementById('grpLeaderboardList');
+  const data = groupMembers.map((m, idx) => {
+    const ts  = getGroupPeriodTrades(m.user_id);
+    const pnl = ts.reduce((s,t) => s+(parseFloat(t.net)||0), 0);
+    const r   = pnl / (m.r_value||100);
+    const wins = ts.filter(t => parseFloat(t.net)>0).length;
+    const wr  = ts.length ? Math.round(wins/ts.length*100) : 0;
+    const streak = calcStreak(m.user_id);
+    const isMe = m.user_id === currentUser.id;
+    return { m, pnl, r, wr, streak, isMe, idx, count: ts.length };
+  }).sort((a,b) => b.r - a.r);
+
+  const medals = ['🥇','🥈','🥉'];
+  el.innerHTML = data.map((d, rank) => {
+    const rStr  = (d.r>=0?'+':'')+d.r.toFixed(2)+'R';
+    const rColor = d.r>0?'var(--accent)':d.r<0?'var(--red)':'var(--muted)';
+    const email = d.isMe ? (currentUser.email||'You') : 'Member '+(rank+1);
+    const short = email.split('@')[0];
+    return '<div class="grp-member-row" style="' + (d.isMe?'border-color:var(--accent);background:rgba(0,214,143,0.03)':'') + '">' +
+      '<div class="grp-rank">' + (medals[rank]||rank+1) + '</div>' +
+      '<div class="grp-avatar" style="background:' + getMemberColor(d.idx) + '">' + getInitial(email) + '</div>' +
+      '<div class="grp-member-info">' +
+        '<div class="grp-member-name">' + short + (d.isMe?' <span style="font-size:10px;color:var(--accent);font-weight:400">(you)</span>':'') + '</div>' +
+        '<div class="grp-member-sub">' + d.count + ' trade' + (d.count!==1?'s':'') + ' · ' + d.wr + '% win rate · 1R = $' + d.m.r_value + '</div>' +
+      '</div>' +
+      '<div style="text-align:right">' +
+        '<div class="grp-member-pnl" style="color:' + rColor + '">' + rStr + '</div>' +
+        '<div class="grp-streak">🔥 ' + d.streak + ' day streak</div>' +
+      '</div>' +
+    '</div>';
+  }).join('') || '<div style="text-align:center;color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:40px">No trades in this period</div>';
+}
+
+function renderGroupFeed() {
+  const el = document.getElementById('grpFeedList');
+  const recent = [...groupTrades].sort((a,b) => new Date(b.datetime)-new Date(a.datetime)).slice(0,40);
+  el.innerHTML = recent.map(t => {
+    const member = groupMembers.find(m => m.user_id === t.user_id);
+    const rVal   = member ? member.r_value : 100;
+    const net    = parseFloat(t.net)||0;
+    const r      = net/rVal;
+    const rStr   = (r>=0?'+':'')+r.toFixed(2)+'R';
+    const rColor = r>0?'var(--accent)':r<0?'var(--red)':'var(--muted)';
+    const isMe   = t.user_id === currentUser.id;
+    const email  = isMe ? (currentUser.email||'You') : 'Member';
+    const short  = email.split('@')[0];
+    const stars  = t.rating ? '★'.repeat(t.rating)+'☆'.repeat(5-t.rating) : '';
+    const dt     = new Date(t.datetime);
+    const timeStr = dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit'})+' '+dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+    return '<div class="grp-feed-item">' +
+      '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">' +
+        '<span style="font-weight:700">' + short + '</span>' +
+        '<span style="background:' + (t.tipo==='LONG'?'rgba(0,214,143,0.15)':'rgba(240,67,90,0.15)') + ';color:' + (t.tipo==='LONG'?'var(--accent)':'var(--red)') + ';border-radius:5px;padding:2px 7px;font-size:11px;font-weight:700">' + (t.tipo||'') + '</span>' +
+        '<span style="font-family:DM Mono,monospace;font-weight:700">' + (t.ativo||'—') + '</span>' +
+        (t.strategy ? '<span style="color:var(--muted);font-size:12px">'+t.strategy+'</span>' : '') +
+        '<span style="font-family:DM Mono,monospace;font-weight:700;color:' + rColor + ';margin-left:auto">' + rStr + '</span>' +
+        (stars ? '<span style="color:var(--yellow);font-size:12px">'+stars+'</span>' : '') +
+      '</div>' +
+      (t.notas ? '<div style="color:var(--muted);font-size:12px;margin-top:6px;font-style:italic">"' + t.notas.slice(0,80) + (t.notas.length>80?'…':'') + '"</div>' : '') +
+      '<div class="grp-feed-time">' + timeStr + '</div>' +
+    '</div>';
+  }).join('') || '<div style="text-align:center;color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:40px">No trades yet</div>';
+}
+
+function renderGroupSetups() {
+  const el = document.getElementById('grpSetupsContent');
+  const bySetup = {};
+  groupTrades.forEach(t => {
+    const s = t.strategy || 'Unknown';
+    if (!bySetup[s]) bySetup[s] = { trades:0, pnl:0, wins:0 };
+    bySetup[s].trades++;
+    const net = parseFloat(t.net)||0;
+    bySetup[s].pnl += net;
+    if (net > 0) bySetup[s].wins++;
+  });
+  const rows = Object.entries(bySetup).sort((a,b) => b[1].pnl-a[1].pnl);
+  const avgR = groupMembers.length ? groupMembers.reduce((s,m)=>s+m.r_value,0)/groupMembers.length : 100;
+  if (!rows.length) { el.innerHTML = '<div style="text-align:center;color:var(--muted);font-family:Outfit,sans-serif;padding:40px">No data</div>'; return; }
+  let tbl = '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-family:Outfit,sans-serif;font-size:13px">';
+  tbl += '<thead><tr>' + ['Setup','Trades','Win %','Avg R','Total R'].map(h =>
+    '<th style="text-align:'+(h==='Setup'?'left':'right')+';padding:10px 14px;color:var(--muted);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid var(--border)">' + h + '</th>'
+  ).join('') + '</tr></thead><tbody>';
+  rows.forEach(([s,d]) => {
+    const wr = Math.round(d.wins/d.trades*100);
+    const totalR = d.pnl/avgR;
+    const avgRVal = totalR/d.trades;
+    const rColor = totalR>0?'var(--accent)':totalR<0?'var(--red)':'var(--muted)';
+    tbl += '<tr style="border-bottom:1px solid var(--border)">' +
+      '<td style="padding:12px 14px;font-weight:600">' + s + '</td>' +
+      '<td style="padding:12px 14px;text-align:right;color:var(--muted)">' + d.trades + '</td>' +
+      '<td style="padding:12px 14px;text-align:right">' + wr + '%</td>' +
+      '<td style="padding:12px 14px;text-align:right;font-family:DM Mono,monospace;color:' + rColor + '">' + (avgRVal>=0?'+':'') + avgRVal.toFixed(2) + 'R</td>' +
+      '<td style="padding:12px 14px;text-align:right;font-family:DM Mono,monospace;font-weight:700;color:' + rColor + '">' + (totalR>=0?'+':'') + totalR.toFixed(2) + 'R</td>' +
+    '</tr>';
+  });
+  el.innerHTML = tbl + '</tbody></table></div>';
+}
+
+function renderGroupRules() {
+  const el = document.getElementById('grpRulesList');
+  el.innerHTML = groupMembers.map((m, idx) => {
+    const isMe   = m.user_id === currentUser.id;
+    const email  = isMe ? (currentUser.email||'You') : 'Member '+(idx+1);
+    const short  = email.split('@')[0];
+    const todayT = groupTrades.filter(t => {
+      if (t.user_id !== m.user_id) return false;
+      return new Date(t.datetime).toDateString() === new Date().toDateString();
+    });
+    const todayPnlR  = todayT.reduce((s,t)=>s+(parseFloat(t.net)||0),0) / m.r_value;
+    const todayCount = todayT.length;
+    const withinLoss   = todayPnlR >= -m.max_loss;
+    const withinTrades = todayCount <= m.max_trades;
+    const compliance   = (withinLoss && withinTrades) ? 100 : (!withinLoss && !withinTrades) ? 0 : 50;
+    const compColor    = compliance===100?'var(--accent)':compliance===50?'var(--yellow)':'var(--red)';
+    return '<div class="grp-rule-row">' +
+      '<div class="grp-rule-header">' +
+        '<div class="grp-avatar" style="background:' + getMemberColor(idx) + ';width:36px;height:36px;font-size:14px">' + getInitial(email) + '</div>' +
+        '<div style="flex:1">' +
+          '<div class="grp-rule-name">' + short + (isMe?' <span style="font-size:10px;color:var(--accent);font-weight:400">(you)</span>':'') + '</div>' +
+          '<div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">Today: ' + todayCount + '/' + m.max_trades + ' trades · ' + todayPnlR.toFixed(2) + 'R</div>' +
+        '</div>' +
+        '<div style="font-family:DM Mono,monospace;font-size:12px;color:' + compColor + ';font-weight:700">' + (compliance===100?'✓ In Rules':'⚠ Check Rules') + '</div>' +
+      '</div>' +
+      '<div class="grp-rule-stats">' +
+        '<div class="grp-rule-stat"><div class="grp-rule-stat-val" style="color:var(--accent)">$' + m.r_value + '</div><div class="grp-rule-stat-lbl">1R Value</div></div>' +
+        '<div class="grp-rule-stat"><div class="grp-rule-stat-val" style="color:var(--accent)">+' + m.gain_target + 'R</div><div class="grp-rule-stat-lbl">Daily Target</div></div>' +
+        '<div class="grp-rule-stat"><div class="grp-rule-stat-val" style="color:var(--red)">-' + m.max_loss + 'R</div><div class="grp-rule-stat-lbl">Max Loss</div></div>' +
+        '<div class="grp-rule-stat"><div class="grp-rule-stat-val">' + m.max_trades + '</div><div class="grp-rule-stat-lbl">Max Trades</div></div>' +
+      '</div>' +
+      '<div class="grp-compliance-bar"><div class="grp-compliance-fill" style="width:' + compliance + '%;background:' + compColor + '"></div></div>' +
+    '</div>';
+  }).join('');
+}
+
+function setGroupPeriod(period, btn) {
+  groupPeriod = period;
+  document.querySelectorAll('.grp-period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderGroupLeaderboard();
+}
+
+function switchGroupTab(name, btn) {
+  document.querySelectorAll('.grp-panel').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.group-sub-tab').forEach(b => b.classList.remove('active'));
+  document.getElementById('grp-' + name).style.display = 'block';
+  btn.classList.add('active');
+}
+
+function copyInviteCode() {
+  const code = document.getElementById('groupInviteCode').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const el = document.getElementById('groupInviteCode');
+    const orig = el.textContent;
+    el.textContent = 'Copied!';
+    setTimeout(() => el.textContent = orig, 1500);
+  });
+}
+
+function setupGroupRealtime() {
+  if (realtimeWS) return;
+  try {
+    const wsUrl = SUPABASE_URL.replace('https','wss') + '/realtime/v1/websocket?apikey=' + SUPABASE_KEY + '&vsn=1.0.0';
+    realtimeWS = new WebSocket(wsUrl);
+    realtimeWS.onopen = () => {
+      realtimeWS.send(JSON.stringify({ topic:'realtime:public:trades', event:'phx_join', payload:{}, ref:'1' }));
+    };
+    realtimeWS.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.event === 'INSERT' || msg.event === 'UPDATE' || msg.event === 'DELETE') {
+          refreshGroupData();
+        }
+      } catch(err) {}
+    };
+  } catch(e) { console.warn('Realtime setup failed:', e); }
+}
 
 // ─────────────── AUTH ──────────────────────────────────────────
 let currentUser = null;
@@ -3883,6 +4361,7 @@ function updateAnalyticsSetupCard() {
 
 // ─────────────── TABS ──────────────────────────────────────────
 function switchTab(name, el) {
+  if (name === 'group' && currentUser && !currentGroup) loadGroup();
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-'+name).classList.add('active');
