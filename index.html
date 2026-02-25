@@ -1016,6 +1016,9 @@
   .pag-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
   .pag-btn:disabled { opacity: 0.3; cursor: default; }
   .pag-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 700; }
+
+  #avatarMenu { animation: fadeIn 0.12s ease; }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-4px); } to { opacity:1; transform:translateY(0); } }
 </style>
 </head>
 <body>
@@ -1092,14 +1095,21 @@
           </div>
         </div>
       </div>
+      <button class="btn-primary" onclick="openModal()">
+        <span style="font-size:16px;line-height:1">+</span> New Trade
+      </button>
       <button class="btn-secondary" onclick="openNoTradeModal()" title="Log a day with no trades">
         ✕ No Trades
       </button>
-      <span id="userEmail" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-right:4px"></span><button onclick="signOut()" style="background:rgba(240,67,90,0.1);color:var(--red);border:1px solid rgba(240,67,90,0.25);padding:6px 12px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-right:8px">Sign Out</button>
-        <button class="btn-outline" onclick="migrateToSupabase()" id="migrateBtn" style="background:rgba(245,200,66,0.12);color:var(--yellow);border:1px solid rgba(245,200,66,0.3);padding:8px 16px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-right:8px" title="Migrate local data to Supabase">⬆ Migrate to Cloud</button>
-        <button class="btn-primary" onclick="openModal()">
-        <span style="font-size:16px;line-height:1">+</span> New Trade
-      </button>
+      <div style="position:relative" id="avatarWrap">
+          <button onclick="toggleAvatarMenu()" id="avatarBtn" style="width:34px;height:34px;border-radius:50%;background:var(--accent);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:Outfit,sans-serif;font-weight:700;font-size:14px;color:#000;transition:opacity 0.15s" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+            <span id="avatarInitial">?</span>
+          </button>
+          <div id="avatarMenu" style="display:none;position:absolute;top:calc(100% + 8px);right:0;background:var(--card);border:1px solid var(--border2);border-radius:12px;padding:8px;min-width:200px;box-shadow:0 8px 32px rgba(0,0,0,0.3);z-index:100">
+            <div id="avatarMenuEmail" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);padding:8px 10px 12px;border-bottom:1px solid var(--border)"></div>
+            <button onclick="signOut()" style="width:100%;background:none;border:none;color:var(--red);font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;padding:10px;border-radius:8px;text-align:left;margin-top:4px;transition:background 0.12s" onmouseover="this.style.background='rgba(240,67,90,0.08)'" onmouseout="this.style.background='none'">Sign Out</button>
+          </div>
+        </div>
     </div>
   </header>
 
@@ -1856,6 +1866,16 @@ async function handleForgotPassword() {
   document.getElementById('loginSuccess').style.display = 'block';
 }
 
+function toggleAvatarMenu() {
+  const menu = document.getElementById('avatarMenu');
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+// Close avatar menu when clicking outside
+document.addEventListener('click', e => {
+  const wrap = document.getElementById('avatarWrap');
+  if (wrap && !wrap.contains(e.target)) document.getElementById('avatarMenu').style.display = 'none';
+});
+
 async function signOut() {
   const token = localStorage.getItem('galt_token');
   if (token) {
@@ -1870,14 +1890,18 @@ async function signOut() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
-  document.getElementById('userEmail').textContent = '';
+  document.getElementById('avatarInitial').textContent = '?';
+  document.getElementById('avatarMenuEmail').textContent = '';
 }
 
 async function bootApp() {
   // Show app, hide login
   document.getElementById('loginScreen').style.display = 'none';
   document.getElementById('app').style.display = 'block';
-  document.getElementById('userEmail').textContent = currentUser?.email || '';
+  const email = currentUser?.email || '';
+  const initial = email ? email[0].toUpperCase() : '?';
+  document.getElementById('avatarInitial').textContent = initial;
+  document.getElementById('avatarMenuEmail').textContent = email;
 
   // Load data
   const [dbTrades, dbNoTrade, dbRecaps, dbBalance] = await Promise.all([
