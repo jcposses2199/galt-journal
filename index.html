@@ -1065,7 +1065,8 @@
       <button class="btn-secondary" onclick="openNoTradeModal()" title="Log a day with no trades">
         ✕ No Trades
       </button>
-      <button class="btn-outline" onclick="migrateToSupabase()" id="migrateBtn" style="background:rgba(245,200,66,0.12);color:var(--yellow);border:1px solid rgba(245,200,66,0.3);padding:8px 16px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-right:8px" title="Migrate local data to Supabase">⬆ Migrate to Cloud</button>
+      <span id="userEmail" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);margin-right:4px"></span><button onclick="signOut()" style="background:rgba(240,67,90,0.1);color:var(--red);border:1px solid rgba(240,67,90,0.25);padding:6px 12px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;margin-right:8px">Sign Out</button>
+        <button class="btn-outline" onclick="migrateToSupabase()" id="migrateBtn" style="background:rgba(245,200,66,0.12);color:var(--yellow);border:1px solid rgba(245,200,66,0.3);padding:8px 16px;border-radius:10px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;margin-right:8px" title="Migrate local data to Supabase">⬆ Migrate to Cloud</button>
         <button class="btn-primary" onclick="openModal()">
         <span style="font-size:16px;line-height:1">+</span> New Trade
       </button>
@@ -1742,15 +1743,144 @@
 
 <script>
 
+
+// ─────────────── AUTH ──────────────────────────────────────────
+let currentUser = null;
+let authMode = 'login';
+
+function showLoginTab(mode) {
+  authMode = mode;
+  const isLogin = mode === 'login';
+  document.getElementById('tabLoginBtn').style.background = isLogin ? 'var(--card)' : 'transparent';
+  document.getElementById('tabLoginBtn').style.color = isLogin ? 'var(--text)' : 'var(--muted)';
+  document.getElementById('tabSignupBtn').style.background = !isLogin ? 'var(--card)' : 'transparent';
+  document.getElementById('tabSignupBtn').style.color = !isLogin ? 'var(--text)' : 'var(--muted)';
+  document.getElementById('authBtn').textContent = isLogin ? 'Sign In' : 'Create Account';
+  document.getElementById('forgotWrap').style.display = isLogin ? 'block' : 'none';
+  document.getElementById('loginError').style.display = 'none';
+  document.getElementById('loginSuccess').style.display = 'none';
+}
+
+async function handleAuth() {
+  const email    = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl    = document.getElementById('loginError');
+  const sucEl    = document.getElementById('loginSuccess');
+  const btn      = document.getElementById('authBtn');
+
+  errEl.style.display = 'none';
+  sucEl.style.display = 'none';
+
+  if (!email || !password) { errEl.textContent = 'Please enter email and password.'; errEl.style.display='block'; return; }
+
+  btn.textContent = '…';
+  btn.disabled = true;
+
+  try {
+    const endpoint = authMode === 'login'
+      ? '/auth/v1/token?grant_type=password'
+      : '/auth/v1/signup';
+
+    const res = await fetch(SUPABASE_URL + endpoint, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+
+    if (!res.ok) throw new Error(data.error_description || data.msg || 'Authentication failed');
+
+    if (authMode === 'signup' && !data.access_token) {
+      sucEl.textContent = '✓ Account created! Check your email to confirm, then sign in.';
+      sucEl.style.display = 'block';
+      btn.textContent = 'Create Account';
+      btn.disabled = false;
+      return;
+    }
+
+    // Login success
+    currentUser = data.user || data;
+    localStorage.setItem('galt_token', data.access_token);
+    localStorage.setItem('galt_refresh', data.refresh_token);
+    localStorage.setItem('galt_user', JSON.stringify(currentUser));
+
+    await bootApp();
+
+  } catch(e) {
+    errEl.textContent = e.message;
+    errEl.style.display = 'block';
+    btn.textContent = authMode === 'login' ? 'Sign In' : 'Create Account';
+    btn.disabled = false;
+  }
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  if (!email) { document.getElementById('loginError').textContent = 'Enter your email first.'; document.getElementById('loginError').style.display='block'; return; }
+  await fetch(SUPABASE_URL + '/auth/v1/recover', {
+    method: 'POST',
+    headers: { 'apikey': SUPABASE_KEY, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  });
+  document.getElementById('loginSuccess').textContent = '✓ Password reset email sent!';
+  document.getElementById('loginSuccess').style.display = 'block';
+}
+
+async function signOut() {
+  const token = localStorage.getItem('galt_token');
+  if (token) {
+    await fetch(SUPABASE_URL + '/auth/v1/logout', {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
+    }).catch(()=>{});
+  }
+  localStorage.removeItem('galt_token');
+  localStorage.removeItem('galt_refresh');
+  localStorage.removeItem('galt_user');
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('userEmail').textContent = '';
+}
+
+async function bootApp() {
+  // Show app, hide login
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('userEmail').textContent = currentUser?.email || '';
+
+  // Load data
+  const [dbTrades, dbNoTrade, dbRecaps, dbBalance] = await Promise.all([
+    loadTradesFromDB(),
+    loadNoTradeDaysFromDB(),
+    loadRecapsFromDB(),
+    loadSettingDB('tradelog_balance', '')
+  ]);
+  trades = dbTrades;
+  noTradeDays = dbNoTrade;
+  localStorage.setItem('tradelog_recaps', JSON.stringify(dbRecaps));
+  if (dbBalance) localStorage.setItem('tradelog_balance', dbBalance);
+
+  initChart();
+  initDailyBarChart();
+  initPerTradeChart();
+  render();
+
+  setTimeout(() => {
+    document.getElementById('ringFill').style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)';
+  }, 120);
+}
+
 // ─────────────── SUPABASE CONFIG ───────────────────────────────
 const SUPABASE_URL = 'https://dprsfkpvytuotfrvylis.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_YldWLvU7fTY0RNL6q0x1uA_eJPTdwkQ';
 
 async function sbFetch(path, options = {}) {
+  const token = localStorage.getItem('galt_token') || SUPABASE_KEY;
   const res = await fetch(SUPABASE_URL + '/rest/v1/' + path, {
     headers: {
       'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
+      'Authorization': 'Bearer ' + token,
       'Content-Type': 'application/json',
       'Prefer': options.prefer || 'return=representation',
       ...options.headers
@@ -1789,7 +1919,8 @@ async function saveTradeDB(t) {
     tipo: t.tipo, qtd: t.qtd, gross: t.gross,
     net: t.net, comm: t.comm, rating: t.rating, notas: t.notas,
     trend: t.trend, candle_color: t.candleColor,
-    candle_form: t.candleForm, strategy: t.strategy, session: t.session
+    candle_form: t.candleForm, strategy: t.strategy, session: t.session,
+    user_id: currentUser?.id
   };
   await sbFetch('trades', {
     method: 'POST',
@@ -1818,7 +1949,7 @@ async function saveNoTradeDayDB(n) {
   await sbFetch('no_trade_days', {
     method: 'POST',
     headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify({ date: n.date, reason: n.reason||'', notes: n.notes||'' })
+    body: JSON.stringify({ date: n.date, reason: n.reason||'', notes: n.notes||'', user_id: currentUser?.id })
   });
 }
 
@@ -1842,7 +1973,7 @@ async function saveRecapDB(key, value) {
   await sbFetch('day_recaps', {
     method: 'POST',
     headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify({ key, value })
+    body: JSON.stringify({ key, value, user_id: currentUser?.id })
   });
 }
 
@@ -1861,7 +1992,7 @@ async function saveSettingDB(key, value) {
     await sbFetch('settings', {
       method: 'POST',
       headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ key, value: String(value) })
+      body: JSON.stringify({ key, value: String(value), user_id: currentUser?.id })
     });
     localStorage.setItem(key, value); // keep local copy too
   } catch(e) {
@@ -1931,38 +2062,26 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('modeTrack').classList.add('on');
   }
 
-  // Show loading indicator
-  document.getElementById('todayDate').textContent += ' · Syncing…';
+  // Check for existing session
+  const savedToken = localStorage.getItem('galt_token');
+  const savedUser  = localStorage.getItem('galt_user');
 
-  // Load from Supabase
-  try {
-    const [dbTrades, dbNoTrade, dbRecaps, dbBalance] = await Promise.all([
-      loadTradesFromDB(),
-      loadNoTradeDaysFromDB(),
-      loadRecapsFromDB(),
-      loadSettingDB('tradelog_balance', '')
-    ]);
-    trades = dbTrades;
-    noTradeDays = dbNoTrade;
-    localStorage.setItem('tradelog_recaps', JSON.stringify(dbRecaps));
-    localStorage.setItem('tradelog_v3', JSON.stringify(trades));
-    localStorage.setItem('tradelog_notrade', JSON.stringify(noTradeDays));
-    if (dbBalance) localStorage.setItem('tradelog_balance', dbBalance);
-    document.getElementById('todayDate').textContent = document.getElementById('todayDate').textContent.replace(' · Syncing…','');
-  } catch(e) {
-    console.warn('Failed to load from Supabase, using local data', e);
-    document.getElementById('todayDate').textContent = document.getElementById('todayDate').textContent.replace(' · Syncing…',' · Offline');
+  if (savedToken && savedUser) {
+    try {
+      // Verify token is still valid
+      const res = await fetch(SUPABASE_URL + '/auth/v1/user', {
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + savedToken }
+      });
+      if (res.ok) {
+        currentUser = JSON.parse(savedUser);
+        await bootApp();
+        return;
+      }
+    } catch(e) {}
   }
 
-  initChart();
-  initDailyBarChart();
-  initPerTradeChart();
-  render();
-
-  // Animate ring after short delay
-  setTimeout(() => {
-    document.getElementById('ringFill').style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)';
-  }, 120);
+  // Show login screen
+  document.getElementById('loginScreen').style.display = 'flex';
 });
 
 function saveTrades() {
