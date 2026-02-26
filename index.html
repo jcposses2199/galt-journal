@@ -1066,6 +1066,9 @@
   .grp-rule-stat-lbl { font-family: Outfit, sans-serif; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
   .grp-compliance-bar { height: 4px; border-radius: 2px; background: var(--border2); margin-top: 12px; overflow: hidden; }
   .grp-compliance-fill { height: 100%; border-radius: 2px; transition: width 0.4s; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .sync-saving { animation: pulse 1s infinite; }
 </style>
 </head>
 <body>
@@ -1111,7 +1114,10 @@
       </div>
     </div>
     <div class="header-right">
-      <button id="migrateBtn" onclick="migrateToSupabase()" style="background:rgba(245,200,66,0.12);color:var(--yellow);border:1px solid rgba(245,200,66,0.3);padding:6px 14px;border-radius:10px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer" title="Migrate local data to Supabase">⬆ Migrate to Cloud</button>
+      <div id="syncIndicator" style="display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:20px;background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.2);transition:all 0.3s">
+        <div id="syncDot" style="width:7px;height:7px;border-radius:50%;background:var(--accent);transition:background 0.3s"></div>
+        <span id="syncLabel" style="font-family:Outfit,sans-serif;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:0.3px">Saved</span>
+      </div>
       <div class="date-badge" id="todayDate"></div>
       <div class="mode-switch" onclick="toggleMode()" title="Toggle light/dark mode">
         <span class="mode-switch-icon" id="modeIcon">🌙</span>
@@ -2263,6 +2269,80 @@ function setupGroupRealtime() {
   } catch(e) { console.warn('Realtime setup failed:', e); }
 }
 
+// ─────────────── SYNC INDICATOR ────────────────────────────────
+let syncTimer = null;
+let retryQueue = []; // {type, data}
+let isRetrying = false;
+
+function setSyncState(state) {
+  const dot   = document.getElementById('syncDot');
+  const label = document.getElementById('syncLabel');
+  const wrap  = document.getElementById('syncIndicator');
+  if (!dot) return;
+  if (state === 'saving') {
+    dot.style.background = 'var(--yellow)';
+    dot.classList.add('sync-saving');
+    label.style.color = 'var(--yellow)';
+    label.textContent = 'Saving…';
+    wrap.style.borderColor = 'rgba(245,200,66,0.3)';
+    wrap.style.background  = 'rgba(245,200,66,0.08)';
+    wrap.style.cursor = 'default';
+    wrap.onclick = null;
+  } else if (state === 'saved') {
+    dot.style.background = 'var(--accent)';
+    dot.classList.remove('sync-saving');
+    label.style.color = 'var(--accent)';
+    label.textContent = 'Saved';
+    wrap.style.borderColor = 'rgba(0,214,143,0.2)';
+    wrap.style.background  = 'rgba(0,214,143,0.08)';
+    wrap.style.cursor = 'default';
+    wrap.onclick = null;
+    retryQueue = [];
+  } else if (state === 'error') {
+    dot.style.background = 'var(--red)';
+    dot.classList.remove('sync-saving');
+    label.style.color = 'var(--red)';
+    label.textContent = 'Failed — Retry?';
+    wrap.style.borderColor = 'rgba(240,67,90,0.3)';
+    wrap.style.background  = 'rgba(240,67,90,0.08)';
+    wrap.style.cursor = 'pointer';
+    wrap.onclick = retryFailedSaves;
+    // Auto retry after 10s
+    if (syncTimer) clearTimeout(syncTimer);
+    syncTimer = setTimeout(() => retryFailedSaves(), 10000);
+  }
+}
+
+function addToRetryQueue(type, data) {
+  // Remove existing entry for same id/key to avoid duplicates
+  retryQueue = retryQueue.filter(item => {
+    if (type === 'trade') return item.data.id !== data.id;
+    if (type === 'notrade') return item.data.date !== data.date;
+    if (type === 'recap') return item.data.key !== data.key;
+    return true;
+  });
+  retryQueue.push({ type, data });
+}
+
+async function retryFailedSaves() {
+  if (isRetrying || !retryQueue.length) return;
+  isRetrying = true;
+  if (syncTimer) clearTimeout(syncTimer);
+  setSyncState('saving');
+  const queue = [...retryQueue];
+  let failed = false;
+  for (const item of queue) {
+    try {
+      if (item.type === 'trade')   await saveTradeDB(item.data);
+      if (item.type === 'notrade') await saveNoTradeDayDB(item.data);
+      if (item.type === 'recap')   await saveRecapDB(item.data.key, item.data.value);
+    } catch(e) { failed = true; }
+  }
+  isRetrying = false;
+  if (!failed) { retryQueue = []; setSyncState('saved'); }
+  else setSyncState('error');
+}
+
 // ─────────────── AUTH ──────────────────────────────────────────
 let currentUser = null;
 let authMode = 'login';
@@ -2448,20 +2528,23 @@ async function loadTradesFromDB() {
 }
 
 async function saveTradeDB(t) {
-  const row = {
-    id: t.id, ativo: t.ativo, datetime: t.datetime,
-    tipo: t.tipo, qtd: t.qtd, gross: t.gross,
-    net: t.net, comm: t.comm, rating: t.rating, notas: t.notas,
-    trend: t.trend, candle_color: t.candleColor,
-    candle_form: t.candleForm, strategy: t.strategy, session: t.session,
-    user_id: currentUser?.id
-  };
-  await sbFetch('trades', {
-    method: 'POST',
-    prefer: 'resolution=merge-duplicates,return=representation',
-    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify(row)
-  });
+  setSyncState('saving');
+  try {
+    const row = {
+      id: t.id, ativo: t.ativo, datetime: t.datetime,
+      tipo: t.tipo, qtd: t.qtd, gross: t.gross,
+      net: t.net, comm: t.comm, rating: t.rating, notas: t.notas,
+      trend: t.trend, candle_color: t.candleColor,
+      candle_form: t.candleForm, strategy: t.strategy, session: t.session,
+      user_id: currentUser?.id
+    };
+    await sbFetch('trades', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify(row)
+    });
+    setSyncState('saved');
+  } catch(e) { addToRetryQueue('trade', t); setSyncState('error'); }
 }
 
 async function deleteTradeDB(id) {
@@ -2480,11 +2563,15 @@ async function loadNoTradeDaysFromDB() {
 }
 
 async function saveNoTradeDayDB(n) {
-  await sbFetch('no_trade_days', {
-    method: 'POST',
-    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify({ date: n.date, reason: n.reason||'', notes: n.notes||'', user_id: currentUser?.id })
-  });
+  setSyncState('saving');
+  try {
+    await sbFetch('no_trade_days', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ date: n.date, reason: n.reason||'', notes: n.notes||'', user_id: currentUser?.id })
+    });
+    setSyncState('saved');
+  } catch(e) { addToRetryQueue('notrade', n); setSyncState('error'); }
 }
 
 async function deleteNoTradeDayDB(date) {
@@ -2504,11 +2591,15 @@ async function loadRecapsFromDB() {
 }
 
 async function saveRecapDB(key, value) {
-  await sbFetch('day_recaps', {
-    method: 'POST',
-    headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-    body: JSON.stringify({ key, value, user_id: currentUser?.id })
-  });
+  setSyncState('saving');
+  try {
+    await sbFetch('day_recaps', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+      body: JSON.stringify({ key, value, user_id: currentUser?.id })
+    });
+    setSyncState('saved');
+  } catch(e) { setSyncState('error'); throw e; }
 }
 
 // ── SETTINGS ────────────────────────────────────────────────────
