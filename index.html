@@ -3240,7 +3240,7 @@ function updateStats() {
   const pf    = (wins.length&&losses.length) ? (avgW/Math.abs(avgL)).toFixed(2) : '—';
 
   const pe = document.getElementById('stat-pnl');
-  pe.textContent = (net>=0?'+':'')+('$'+fmtN(net));
+  pe.textContent = (net>=0?'+':'-')+'$'+fmtN(net);
   pe.className = 'stat-value '+(net>0?'positive':net<0?'negative':'neutral');
   document.getElementById('stat-pnl-sub').textContent = `${ft.length} total trades`;
 
@@ -4030,7 +4030,7 @@ function updateCalendar() {
   const pnlValEl = document.getElementById('calMonthPnlVal');
   if (pnlEl && pnlValEl) {
     pnlEl.style.display = monthPnl !== 0 ? 'inline-flex' : 'none';
-    pnlValEl.textContent = (monthPnl>0?'+':'')+'$'+Math.abs(monthPnl).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+    pnlValEl.textContent = (monthPnl>0?'+':monthPnl<0?'-':'')+'$'+Math.abs(monthPnl).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
     pnlValEl.style.color = monthPnl > 0 ? 'var(--accent)' : monthPnl < 0 ? 'var(--red)' : 'var(--muted)';
   }
 
