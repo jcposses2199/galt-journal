@@ -1621,6 +1621,10 @@
       <div style="background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:36px;width:100%;max-width:460px;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
         <div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700;margin-bottom:6px">Your Trading Rules</div>
         <div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted);margin-bottom:24px">Define your risk parameters for this group</div>
+        <div style="margin-bottom:16px">
+          <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Display Name</label>
+          <input id="ruleDisplayName" type="text" placeholder="How you appear in the group…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'">
+        </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
           <div>
             <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">R Value ($)</label>
@@ -1991,17 +1995,26 @@ async function joinGroup() {
 }
 
 async function saveGroupRules() {
-  const r    = parseFloat(document.getElementById('ruleRValue').value) || 100;
-  const gain = parseFloat(document.getElementById('ruleGainTarget').value) || 2;
-  const loss = parseFloat(document.getElementById('ruleMaxLoss').value) || 1.5;
-  const maxT = parseInt(document.getElementById('ruleMaxTrades').value) || 3;
+  const r       = parseFloat(document.getElementById('ruleRValue').value) || 100;
+  const gain    = parseFloat(document.getElementById('ruleGainTarget').value) || 2;
+  const loss    = parseFloat(document.getElementById('ruleMaxLoss').value) || 1.5;
+  const maxT    = parseInt(document.getElementById('ruleMaxTrades').value) || 3;
+  const dname   = document.getElementById('ruleDisplayName').value.trim() || currentUser.email.split('@')[0];
   try {
-    const rows = await sbFetch('group_members', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify({ group_id: pendingGroupId, user_id: currentUser.id, r_value: r, gain_target: gain, max_loss: loss, max_trades: maxT })
-    });
-    currentMember = rows[0];
+    const isEditing = currentMember && currentMember.id;
+    if (isEditing) {
+      await sbFetch('group_members?id=eq.' + currentMember.id, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify({ r_value: r, gain_target: gain, max_loss: loss, max_trades: maxT, display_name: dname })
+      });
+    } else {
+      await sbFetch('group_members', {
+        method: 'POST',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify({ group_id: pendingGroupId, user_id: currentUser.id, r_value: r, gain_target: gain, max_loss: loss, max_trades: maxT, display_name: dname })
+      });
+    }
     const token = localStorage.getItem('galt_token') || SUPABASE_KEY;
     const res = await fetch(SUPABASE_URL + '/rest/v1/group_members?user_id=eq.' + currentUser.id + '&select=*,groups(*)', {
       headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
@@ -2010,16 +2023,17 @@ async function saveGroupRules() {
     currentGroup = data[0].groups;
     currentMember = data[0];
     document.getElementById('groupRulesModal').style.display = 'none';
-    showGroupDashboard();
+    if (isEditing) { await refreshGroupData(); } else { showGroupDashboard(); }
   } catch(e) { alert('Error saving rules: ' + e.message); }
 }
 
 async function openGroupRulesEdit() {
   if (currentMember) {
-    document.getElementById('ruleRValue').value    = currentMember.r_value;
-    document.getElementById('ruleGainTarget').value = currentMember.gain_target;
-    document.getElementById('ruleMaxLoss').value   = currentMember.max_loss;
-    document.getElementById('ruleMaxTrades').value = currentMember.max_trades;
+    document.getElementById('ruleRValue').value      = currentMember.r_value;
+    document.getElementById('ruleGainTarget').value  = currentMember.gain_target;
+    document.getElementById('ruleMaxLoss').value     = currentMember.max_loss;
+    document.getElementById('ruleMaxTrades').value   = currentMember.max_trades;
+    document.getElementById('ruleDisplayName').value = currentMember.display_name || '';
   }
   pendingGroupId = currentGroup.id;
   document.getElementById('groupRulesModal').style.display = 'flex';
@@ -2065,8 +2079,7 @@ function getGroupPeriodTrades(userId) {
 }
 
 function calcStreak(userId) {
-  const member = groupMembers.find(m => m.user_id === userId);
-  if (!member) return 0;
+  // Count consecutive GREEN days (net profit > 0)
   const byDay = {};
   groupTrades.filter(t => t.user_id === userId).forEach(t => {
     const d = new Date(t.datetime).toDateString();
@@ -2076,7 +2089,7 @@ function calcStreak(userId) {
   const days = Object.keys(byDay).sort((a,b) => new Date(b)-new Date(a));
   let streak = 0;
   for (const day of days) {
-    if ((byDay[day] / member.r_value) >= -member.max_loss) streak++;
+    if (byDay[day] > 0) streak++;
     else break;
   }
   return streak;
@@ -2097,20 +2110,23 @@ function renderGroupLeaderboard() {
 
   const medals = ['🥇','🥈','🥉'];
   el.innerHTML = data.map((d, rank) => {
-    const rStr  = (d.r>=0?'+':'')+d.r.toFixed(2)+'R';
+    const rStr   = (d.r>=0?'+':'')+d.r.toFixed(2)+'R';
+    const pnlStr = (d.pnl>=0?'+$':'−$')+Math.abs(d.pnl).toFixed(2);
     const rColor = d.r>0?'var(--accent)':d.r<0?'var(--red)':'var(--muted)';
-    const email = d.isMe ? (currentUser.email||'You') : 'Member '+(rank+1);
-    const short = email.split('@')[0];
+    const email  = d.isMe ? (currentUser.email||'You') : 'Member '+(rank+1);
+    const short  = d.m.display_name || email.split('@')[0];
+    const streakLabel = d.streak > 0 ? '🔥 ' + d.streak + ' green day' + (d.streak!==1?'s':'') : '—';
     return '<div class="grp-member-row" style="' + (d.isMe?'border-color:var(--accent);background:rgba(0,214,143,0.03)':'') + '">' +
-      '<div class="grp-rank">' + (medals[rank]||rank+1) + '</div>' +
+      '<div class="grp-rank" style="font-size:18px;width:32px">' + (medals[rank]||'#'+(rank+1)) + '</div>' +
       '<div class="grp-avatar" style="background:' + getMemberColor(d.idx) + '">' + getInitial(email) + '</div>' +
       '<div class="grp-member-info">' +
         '<div class="grp-member-name">' + short + (d.isMe?' <span style="font-size:10px;color:var(--accent);font-weight:400">(you)</span>':'') + '</div>' +
-        '<div class="grp-member-sub">' + d.count + ' trade' + (d.count!==1?'s':'') + ' · ' + d.wr + '% win rate · 1R = $' + d.m.r_value + '</div>' +
+        '<div class="grp-member-sub">' + d.count + ' trade' + (d.count!==1?'s':'') + ' · ' + d.wr + '% win rate · 1R=$' + d.m.r_value + '</div>' +
+        '<div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);margin-top:2px">' + streakLabel + '</div>' +
       '</div>' +
       '<div style="text-align:right">' +
         '<div class="grp-member-pnl" style="color:' + rColor + '">' + rStr + '</div>' +
-        '<div class="grp-streak">🔥 ' + d.streak + ' day streak</div>' +
+        '<div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);margin-top:2px">' + pnlStr + '</div>' +
       '</div>' +
     '</div>';
   }).join('') || '<div style="text-align:center;color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:40px">No trades in this period</div>';
@@ -2127,8 +2143,9 @@ function renderGroupFeed() {
     const rStr   = (r>=0?'+':'')+r.toFixed(2)+'R';
     const rColor = r>0?'var(--accent)':r<0?'var(--red)':'var(--muted)';
     const isMe   = t.user_id === currentUser.id;
+    const memberM = groupMembers.find(m => m.user_id === t.user_id);
     const email  = isMe ? (currentUser.email||'You') : 'Member';
-    const short  = email.split('@')[0];
+    const short  = memberM?.display_name || email.split('@')[0];
     const stars  = t.rating ? '★'.repeat(t.rating)+'☆'.repeat(5-t.rating) : '';
     const dt     = new Date(t.datetime);
     const timeStr = dt.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit'})+' '+dt.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
@@ -2186,7 +2203,7 @@ function renderGroupRules() {
   el.innerHTML = groupMembers.map((m, idx) => {
     const isMe   = m.user_id === currentUser.id;
     const email  = isMe ? (currentUser.email||'You') : 'Member '+(idx+1);
-    const short  = email.split('@')[0];
+    const short  = m.display_name || email.split('@')[0];
     const todayT = groupTrades.filter(t => {
       if (t.user_id !== m.user_id) return false;
       return new Date(t.datetime).toDateString() === new Date().toDateString();
