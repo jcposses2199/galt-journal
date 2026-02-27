@@ -2503,7 +2503,7 @@ async function sbFetch(path, options = {}) {
 // ── TRADES ──────────────────────────────────────────────────────
 async function loadTradesFromDB() {
   try {
-    const rows = await sbFetch('trades?order=datetime.desc&limit=5000');
+    const rows = await sbFetch('trades?user_id=eq.' + currentUser.id + '&order=datetime.desc&limit=5000');
     return rows.map(r => ({
       id: r.id, ativo: r.ativo, datetime: r.datetime,
       tipo: r.tipo, qtd: r.qtd, gross: parseFloat(r.gross)||0,
@@ -2545,7 +2545,7 @@ async function deleteTradeDB(id) {
 // ── NO TRADE DAYS ────────────────────────────────────────────────
 async function loadNoTradeDaysFromDB() {
   try {
-    const rows = await sbFetch('no_trade_days?order=date.desc');
+    const rows = await sbFetch('no_trade_days?user_id=eq.' + currentUser.id + '&order=date.desc');
     return rows.map(r => ({ date: r.date, reason: r.reason||'', notes: r.notes||'' }));
   } catch(e) {
     console.warn('Supabase no_trade load failed:', e);
@@ -2572,7 +2572,7 @@ async function deleteNoTradeDayDB(date) {
 // ── DAY RECAPS ───────────────────────────────────────────────────
 async function loadRecapsFromDB() {
   try {
-    const rows = await sbFetch('day_recaps');
+    const rows = await sbFetch('day_recaps?user_id=eq.' + currentUser.id);
     const obj = {};
     rows.forEach(r => obj[r.key] = r.value);
     return obj;
