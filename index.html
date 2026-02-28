@@ -3027,7 +3027,8 @@ async function loadTradesFromDB() {
       net: parseFloat(r.net)||0, comm: parseFloat(r.comm)||0,
       rating: r.rating, notas: r.notas,
       trend: r.trend, candleColor: r.candle_color,
-      candleForm: r.candle_form, strategy: r.strategy, session: r.session
+      candleForm: r.candle_form, strategy: r.strategy, session: r.session,
+      account_id: r.account_id || null
     }));
   } catch(e) {
     console.warn('Supabase load failed, using localStorage:', e);
