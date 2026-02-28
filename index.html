@@ -1069,6 +1069,19 @@
 
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
   .sync-saving { animation: pulse 1s infinite; }
+
+  .acc-sub-tab {
+    background: transparent; border: none; color: var(--muted);
+    font-family: Outfit, sans-serif; font-size: 13px; font-weight: 600;
+    padding: 8px 16px; border-radius: 9px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .acc-sub-tab.active { background: var(--card); color: var(--text); }
+  .acc-progress-bar { height: 8px; border-radius: 4px; background: var(--border2); overflow: hidden; margin-top: 6px; }
+  .acc-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
+  .acc-stat { background: var(--bg); border-radius: 12px; padding: 14px 16px; }
+  .acc-stat-val { font-family: DM Mono, monospace; font-size: 18px; font-weight: 700; margin-bottom: 2px; }
+  .acc-stat-lbl { font-family: Outfit, sans-serif; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  .acc-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-family: Outfit, sans-serif; font-size: 12px; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -1174,6 +1187,7 @@
     <button class="tab" onclick="switchTab('setups',this)">Setup Report</button>
     <button class="tab" onclick="switchTab('history',this)">History</button>
     <button class="tab" onclick="switchTab('calendar',this)">Calendar</button>
+    <button class="tab" onclick="switchTab('accounts',this)" id="accountsTabBtn">Accounts</button>
     <button class="tab" onclick="switchTab('group',this)" id="groupTabBtn">Group</button>
   </div>
 
@@ -1680,6 +1694,83 @@
     </div>
   </div>
 
+
+  <!-- ACCOUNTS TAB -->
+  <div id="tab-accounts" class="tab-content">
+
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+      <div style="font-family:Outfit,sans-serif;font-size:20px;font-weight:700">Prop Accounts</div>
+      <button onclick="openNewAccountModal()" style="background:var(--accent);color:#000;border:none;padding:10px 20px;border-radius:12px;font-family:Outfit,sans-serif;font-size:13px;font-weight:700;cursor:pointer">+ Add Account</button>
+    </div>
+
+    <!-- Account selector tabs -->
+    <div id="accountTabBar" style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:12px;overflow-x:auto;flex-wrap:wrap"></div>
+
+    <!-- Account content -->
+    <div id="accountContent"></div>
+
+    <!-- New Account Modal -->
+    <div id="accountModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;overflow-y:auto">
+      <div style="background:var(--card);border:1px solid var(--border2);border-radius:20px;padding:36px;width:100%;max-width:500px;margin:20px auto;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
+          <div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700" id="accountModalTitle">New Prop Account</div>
+          <button onclick="closeAccountModal()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer">×</button>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="grid-column:1/-1">
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Firm</label>
+            <select id="acc-firm" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box" onchange="toggleCustomFirm()">
+              <option value="Apex">Apex Trader Funding</option>
+              <option value="Topstep">Topstep</option>
+              <option value="FTMO">FTMO</option>
+              <option value="MyFundedFutures">My Funded Futures</option>
+              <option value="Bulenox">Bulenox</option>
+              <option value="other">Other…</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;display:none" id="customFirmDiv">
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Firm Name</label>
+            <input id="acc-firm-custom" placeholder="Firm name…" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div style="grid-column:1/-1">
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Nickname</label>
+            <input id="acc-nickname" placeholder="e.g. Apex 50k #1" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Account Size ($)</label>
+            <input id="acc-size" type="number" value="50000" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:DM Mono,monospace;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Start Date</label>
+            <input id="acc-start" type="date" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Profit Target ($)</label>
+            <input id="acc-target" type="number" placeholder="3000" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:DM Mono,monospace;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Trailing Drawdown ($)</label>
+            <input id="acc-drawdown" type="number" placeholder="2500" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:DM Mono,monospace;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Max Daily Loss ($)</label>
+            <input id="acc-daily-loss" type="number" placeholder="1500" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:DM Mono,monospace;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Min Trading Days</label>
+            <input id="acc-min-days" type="number" value="0" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:DM Mono,monospace;font-size:14px;outline:none;box-sizing:border-box">
+          </div>
+        </div>
+        <input type="hidden" id="acc-edit-id">
+        <div style="display:flex;gap:10px;margin-top:24px">
+          <button onclick="saveAccount()" style="flex:1;background:var(--accent);color:#000;border:none;padding:12px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer">Save Account</button>
+          <button onclick="closeAccountModal()" style="background:var(--card);color:var(--muted);border:1px solid var(--border2);padding:12px 20px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;cursor:pointer">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   </div>
 
 </div><!-- /app -->
@@ -1757,6 +1848,18 @@
     </div>
     <input type="hidden" id="f-edit-id" value="">
 
+    <!-- Section: PA Account -->
+    <div id="paAccountSection" style="display:none">
+      <div class="form-section-label">Prop Account</div>
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Account</label>
+          <select id="f-account" style="background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:10px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;width:100%">
+            <option value="">— Personal (no PA) —</option>
+          </select>
+        </div>
+      </div>
+    </div>
     <!-- Section: Basic info -->
     <div class="form-section-label">Trade Info</div>
     <div class="form-grid">
@@ -1928,6 +2031,353 @@
 <script>
 
 
+
+
+// ============= PROP ACCOUNTS =================================
+let propAccounts = [];
+let selectedAccountId = 'consolidated';
+let editingAccountId = null;
+
+async function loadPropAccounts() {
+  try {
+    const rows = await sbFetch('prop_accounts?user_id=eq.' + currentUser.id + '&order=created_at.asc');
+    propAccounts = rows;
+    updateAccountDropdown();
+    renderAccountTabBar();
+    renderAccountContent();
+  } catch(e) { console.warn('PA load error:', e); }
+}
+
+function updateAccountDropdown() {
+  const sel = document.getElementById('f-account');
+  if (!sel) return;
+  // Keep first option
+  while (sel.options.length > 1) sel.remove(1);
+  // Group by firm
+  const firms = [...new Set(propAccounts.map(a => a.firm))];
+  firms.forEach(firm => {
+    const accs = propAccounts.filter(a => a.firm === firm);
+    if (accs.length > 1) {
+      const allOpt = document.createElement('option');
+      allOpt.value = 'all:' + firm;
+      allOpt.textContent = '— All ' + firm + ' —';
+      sel.appendChild(allOpt);
+    }
+    accs.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.id;
+      opt.textContent = a.nickname + ' (' + firm + ')';
+      sel.appendChild(opt);
+    });
+  });
+  // Show section if accounts exist
+  const section = document.getElementById('paAccountSection');
+  if (section) section.style.display = propAccounts.length ? 'block' : 'none';
+}
+
+function renderAccountTabBar() {
+  const bar = document.getElementById('accountTabBar');
+  if (!bar) return;
+  bar.innerHTML = '';
+  const addBtn = (id, label) => {
+    const b = document.createElement('button');
+    b.className = 'acc-sub-tab' + (selectedAccountId === id ? ' active' : '');
+    b.textContent = label;
+    b.onclick = () => selectAccount(id, b);
+    bar.appendChild(b);
+  };
+  addBtn('consolidated', '📊 Consolidated');
+  propAccounts.forEach(a => addBtn(a.id, a.nickname));
+}
+
+function selectAccount(id, btn) {
+  selectedAccountId = id;
+  document.querySelectorAll('.acc-sub-tab').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderAccountContent();
+}
+
+function calcTrailingDrawdown(account) {
+  // Get trades for this account
+  const accTrades = trades.filter(t => t.account_id === account.id).sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
+  let equity = account.initial_balance || account.size;
+  let peak   = equity;
+  let floor  = equity - account.trailing_drawdown;
+  const targetLocked = account.profit_target;
+
+  accTrades.forEach(t => {
+    equity += parseFloat(t.net) || 0;
+    // Trailing: floor moves up with peak, but stops once target reached
+    if (equity > peak) {
+      const gained = equity - (account.initial_balance || account.size);
+      if (gained < targetLocked) {
+        peak = equity;
+        floor = peak - account.trailing_drawdown;
+      }
+    }
+  });
+
+  const pnl          = equity - (account.initial_balance || account.size);
+  const currentDD    = equity - peak; // <= 0
+  const remainingDD  = equity - floor; // how much left before breach
+  const targetProg   = Math.min(pnl / account.profit_target, 1);
+  const ddProg       = remainingDD / account.trailing_drawdown;
+  const tradingDays  = [...new Set(accTrades.map(t => new Date(t.datetime).toDateString()))].length;
+  const dailyLosses  = {};
+  accTrades.forEach(t => {
+    const d = new Date(t.datetime).toDateString();
+    if (!dailyLosses[d]) dailyLosses[d] = 0;
+    dailyLosses[d] += parseFloat(t.net)||0;
+  });
+  const worstDay = Math.min(...Object.values(dailyLosses), 0);
+
+  let status = 'on_track';
+  if (ddProg < 0.15 || worstDay < -account.max_daily_loss * 0.9) status = 'at_risk';
+  else if (ddProg < 0.35) status = 'caution';
+  if (pnl >= account.profit_target && tradingDays >= account.min_trading_days) status = 'ready';
+
+  return { equity, pnl, peak, floor, currentDD, remainingDD, targetProg, ddProg, tradingDays, worstDay, status };
+}
+
+function renderAccountContent() {
+  const el = document.getElementById('accountContent');
+  if (!el) return;
+
+  if (!propAccounts.length) {
+    el.innerHTML = '<div style="text-align:center;padding:60px;font-family:Outfit,sans-serif;color:var(--muted)"><div style="font-size:40px;margin-bottom:12px">📋</div><div style="font-size:16px;font-weight:600;margin-bottom:8px">No accounts yet</div><div style="font-size:13px">Add your first prop account to start tracking</div></div>';
+    return;
+  }
+
+  if (selectedAccountId === 'consolidated') {
+    renderConsolidated(el);
+  } else {
+    const acc = propAccounts.find(a => a.id === selectedAccountId);
+    if (acc) renderSingleAccount(el, acc);
+  }
+}
+
+function renderConsolidated(el) {
+  const stats = propAccounts.map(a => ({ a, s: calcTrailingDrawdown(a) }));
+  const totalPnl = stats.reduce((s,x) => s + x.s.pnl, 0);
+  const statusColors = { on_track: 'var(--accent)', caution: 'var(--yellow)', at_risk: 'var(--red)', ready: '#4da8ff' };
+  const statusLabels = { on_track: '✓ On Track', caution: '⚠ Caution', at_risk: '✗ At Risk', ready: '🏆 Ready for Payout' };
+
+  let h = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px">';
+  h += renderAccStat((totalPnl>=0?'+$':'-$')+Math.abs(totalPnl).toFixed(2), 'Total P&L', totalPnl>0?'var(--accent)':totalPnl<0?'var(--red)':'var(--muted)');
+  h += renderAccStat(propAccounts.length, 'Active Accounts', 'var(--text)');
+  const passing = stats.filter(x => x.s.status === 'ready').length;
+  h += renderAccStat(passing, 'Ready for Payout', 'var(--accent)');
+  const atRisk = stats.filter(x => x.s.status === 'at_risk').length;
+  h += renderAccStat(atRisk, 'At Risk', atRisk>0?'var(--red)':'var(--muted)');
+  h += '</div><div style="display:flex;flex-direction:column;gap:14px">';
+
+  stats.forEach(({a,s}) => {
+    const sc = statusColors[s.status];
+    const sl = statusLabels[s.status];
+    const tPct = Math.round(s.targetProg * 100);
+    const dPct = Math.round(s.ddProg * 100);
+    const div = document.createElement('div');
+    div.className = 'card';
+    div.style.cursor = 'pointer';
+    div.onclick = () => selectAccount(a.id, null);
+    div.innerHTML =
+      '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
+        '<div>' +
+          '<div style="font-family:Outfit,sans-serif;font-size:15px;font-weight:700">' + a.nickname + '</div>' +
+          '<div style="font-family:Outfit,sans-serif;font-size:12px;color:var(--muted)">' + a.firm + ' · $' + a.size.toLocaleString() + '</div>' +
+        '</div>' +
+        '<div class="acc-status-badge" style="background:' + sc + '20;color:' + sc + '">' + sl + '</div>' +
+      '</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">' +
+        '<div>' +
+          '<div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);margin-bottom:4px">Profit Target</div>' +
+          '<div style="font-family:DM Mono,monospace;font-size:13px;font-weight:600">' + (s.pnl>=0?'+$':'-$') + Math.abs(s.pnl).toFixed(0) + ' / $' + a.profit_target.toLocaleString() + '</div>' +
+          '<div class="acc-progress-bar"><div class="acc-progress-fill" style="width:' + tPct + '%;background:var(--accent)"></div></div>' +
+        '</div>' +
+        '<div>' +
+          '<div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);margin-bottom:4px">Trailing DD Remaining</div>' +
+          '<div style="font-family:DM Mono,monospace;font-size:13px;font-weight:600;color:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '">$' + s.remainingDD.toFixed(0) + ' / $' + a.trailing_drawdown.toLocaleString() + '</div>' +
+          '<div class="acc-progress-bar"><div class="acc-progress-fill" style="width:' + dPct + '%;background:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '"></div></div>' +
+        '</div>' +
+      '</div>';
+    h += div.outerHTML;
+  });
+
+  h += '</div>';
+  el.innerHTML = h;
+}
+
+function renderSingleAccount(el, acc) {
+  const s = calcTrailingDrawdown(acc);
+  const statusColors = { on_track: 'var(--accent)', caution: 'var(--yellow)', at_risk: 'var(--red)', ready: '#4da8ff' };
+  const statusLabels = { on_track: '✓ On Track', caution: '⚠ Caution', at_risk: '✗ At Risk', ready: '🏆 Ready for Payout' };
+  const sc = statusColors[s.status];
+  const sl = statusLabels[s.status];
+  const tPct = Math.min(Math.round(s.targetProg*100), 100);
+  const dPct = Math.min(Math.round(s.ddProg*100), 100);
+  const avgPerDay = s.tradingDays ? s.pnl / s.tradingDays : 0;
+  const remaining = acc.profit_target - s.pnl;
+  const estDays = avgPerDay > 0 ? Math.ceil(remaining / avgPerDay) : null;
+
+  const wrap = document.createElement('div');
+
+  // Header
+  const hdr = document.createElement('div');
+  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px';
+  const editBtn = document.createElement('button');
+  editBtn.textContent = '✏ Edit';
+  editBtn.style.cssText = 'background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer';
+  editBtn.onclick = () => openEditAccountModal(acc.id);
+  hdr.innerHTML =
+    '<div>' +
+      '<div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700">' + acc.nickname + '</div>' +
+      '<div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted)">' + acc.firm + ' · $' + acc.size.toLocaleString() + ' account</div>' +
+    '</div>' +
+    '<div style="display:flex;gap:8px;align-items:center">' +
+      '<div class="acc-status-badge" style="background:' + sc + '20;color:' + sc + '">' + sl + '</div>' +
+    '</div>';
+  hdr.querySelector('div:last-child').appendChild(editBtn);
+  wrap.appendChild(hdr);
+
+  // Stats grid
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px';
+  grid.innerHTML =
+    renderAccStat((s.pnl>=0?'+$':'-$')+Math.abs(s.pnl).toFixed(2), 'Net P&L', s.pnl>0?'var(--accent)':s.pnl<0?'var(--red)':'var(--muted)') +
+    renderAccStat('$'+s.equity.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), 'Current Equity', 'var(--text)') +
+    renderAccStat('$'+s.floor.toFixed(2), 'DD Floor', 'var(--red)') +
+    renderAccStat('$'+s.remainingDD.toFixed(2), 'DD Buffer', dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') +
+    renderAccStat(s.tradingDays + (acc.min_trading_days ? ' / ' + acc.min_trading_days : ''), 'Trading Days', s.tradingDays >= acc.min_trading_days ? 'var(--accent)' : 'var(--yellow)') +
+    renderAccStat(estDays ? estDays + ' days' : '—', 'Est. to Payout', 'var(--muted)');
+  wrap.appendChild(grid);
+
+  // Progress bars card
+  const progCard = document.createElement('div');
+  progCard.className = 'card';
+  progCard.style.marginBottom = '20px';
+  progCard.innerHTML =
+    '<div style="margin-bottom:18px">' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+        '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Profit Target</span>' +
+        '<span style="font-family:DM Mono,monospace;font-size:13px">' + (s.pnl>=0?'+$':'-$') + Math.abs(s.pnl).toFixed(2) + ' / $' + acc.profit_target.toLocaleString() + ' (' + tPct + '%)</span>' +
+      '</div>' +
+      '<div class="acc-progress-bar" style="height:12px"><div class="acc-progress-fill" style="width:' + tPct + '%;background:var(--accent)"></div></div>' +
+    '</div>' +
+    '<div>' +
+      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+        '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Trailing Drawdown Buffer</span>' +
+        '<span style="font-family:DM Mono,monospace;font-size:13px;color:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '">$' + s.remainingDD.toFixed(2) + ' / $' + acc.trailing_drawdown.toLocaleString() + ' (' + dPct + '%)</span>' +
+      '</div>' +
+      '<div class="acc-progress-bar" style="height:12px"><div class="acc-progress-fill" style="width:' + dPct + '%;background:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '"></div></div>' +
+    '</div>';
+  wrap.appendChild(progCard);
+
+  // Rules card
+  const rulesCard = document.createElement('div');
+  rulesCard.className = 'card';
+  rulesCard.innerHTML =
+    '<div class="card-title" style="margin-bottom:14px">Account Rules</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
+      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Profit Target</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--accent)">$' + acc.profit_target.toLocaleString() + '</div></div>' +
+      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Trailing DD</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.trailing_drawdown.toLocaleString() + '</div></div>' +
+      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Max Daily Loss</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.max_daily_loss.toLocaleString() + '</div></div>' +
+      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Min Trading Days</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700">' + (acc.min_trading_days||'—') + '</div></div>' +
+    '</div>';
+  wrap.appendChild(rulesCard);
+
+  el.innerHTML = '';
+  el.appendChild(wrap);
+}
+
+function renderAccStat(val, lbl, color) {
+  return '<div class="acc-stat"><div class="acc-stat-val" style="color:' + color + '">' + val + '</div><div class="acc-stat-lbl">' + lbl + '</div></div>';
+}
+
+function openNewAccountModal() {
+  editingAccountId = null;
+  document.getElementById('accountModalTitle').textContent = 'New Prop Account';
+  document.getElementById('acc-firm').value = 'Apex';
+  document.getElementById('acc-nickname').value = '';
+  document.getElementById('acc-size').value = '50000';
+  document.getElementById('acc-target').value = '';
+  document.getElementById('acc-drawdown').value = '';
+  document.getElementById('acc-daily-loss').value = '';
+  document.getElementById('acc-min-days').value = '0';
+  document.getElementById('acc-edit-id').value = '';
+  const today = new Date();
+  document.getElementById('acc-start').value = today.toISOString().split('T')[0];
+  document.getElementById('customFirmDiv').style.display = 'none';
+  document.getElementById('accountModal').style.display = 'flex';
+}
+
+function openEditAccountModal(id) {
+  const acc = propAccounts.find(a => a.id === id);
+  if (!acc) return;
+  editingAccountId = id;
+  document.getElementById('accountModalTitle').textContent = 'Edit Account';
+  const knownFirms = ['Apex','Topstep','FTMO','MyFundedFutures','Bulenox'];
+  if (knownFirms.includes(acc.firm)) {
+    document.getElementById('acc-firm').value = acc.firm;
+    document.getElementById('customFirmDiv').style.display = 'none';
+  } else {
+    document.getElementById('acc-firm').value = 'other';
+    document.getElementById('customFirmDiv').style.display = 'block';
+    document.getElementById('acc-firm-custom').value = acc.firm;
+  }
+  document.getElementById('acc-nickname').value = acc.nickname;
+  document.getElementById('acc-size').value = acc.size;
+  document.getElementById('acc-target').value = acc.profit_target;
+  document.getElementById('acc-drawdown').value = acc.trailing_drawdown;
+  document.getElementById('acc-daily-loss').value = acc.max_daily_loss;
+  document.getElementById('acc-min-days').value = acc.min_trading_days || 0;
+  document.getElementById('acc-start').value = acc.start_date || '';
+  document.getElementById('acc-edit-id').value = id;
+  document.getElementById('accountModal').style.display = 'flex';
+}
+
+function closeAccountModal() {
+  document.getElementById('accountModal').style.display = 'none';
+}
+
+function toggleCustomFirm() {
+  const v = document.getElementById('acc-firm').value;
+  document.getElementById('customFirmDiv').style.display = v === 'other' ? 'block' : 'none';
+}
+
+async function saveAccount() {
+  const firmSel = document.getElementById('acc-firm').value;
+  const firm    = firmSel === 'other' ? (document.getElementById('acc-firm-custom').value.trim() || 'Other') : firmSel;
+  const nickname = document.getElementById('acc-nickname').value.trim();
+  const size     = parseFloat(document.getElementById('acc-size').value) || 50000;
+  const target   = parseFloat(document.getElementById('acc-target').value);
+  const drawdown = parseFloat(document.getElementById('acc-drawdown').value);
+  const dailyLoss = parseFloat(document.getElementById('acc-daily-loss').value);
+  const minDays  = parseInt(document.getElementById('acc-min-days').value) || 0;
+  const startDate = document.getElementById('acc-start').value;
+  const editId   = document.getElementById('acc-edit-id').value;
+
+  if (!nickname || isNaN(target) || isNaN(drawdown) || isNaN(dailyLoss)) {
+    alert('Please fill in all required fields.'); return;
+  }
+
+  const payload = { firm, nickname, size, profit_target: target, trailing_drawdown: drawdown, max_daily_loss: dailyLoss, min_trading_days: minDays, start_date: startDate || null, initial_balance: size, user_id: currentUser.id };
+
+  try {
+    if (editId) {
+      await sbFetch('prop_accounts?id=eq.' + editId, {
+        method: 'PATCH', headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+    } else {
+      await sbFetch('prop_accounts', {
+        method: 'POST', headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+      });
+    }
+    closeAccountModal();
+    await loadPropAccounts();
+  } catch(e) { alert('Error saving account: ' + e.message); }
+}
 
 // ─────────────── GROUP SYSTEM ──────────────────────────────────
 let currentGroup = null;
@@ -3179,12 +3629,23 @@ function saveTrade() {
     candleForm:  document.getElementById('f-candle-formation').value,
     ema:         '',
     strategy:    document.getElementById('f-strategy').value,
-    session:     document.getElementById('f-session').value
+    session:     document.getElementById('f-session').value,
+    account_id:  document.getElementById('f-account')?.value || null
   };
 
+  const accVal = tradeData.account_id;
   if (editId) {
     const idx = trades.findIndex(t => t.id === editId);
     if (idx !== -1) { trades[idx] = { ...trades[idx], ...tradeData }; saveTradeDB(trades[idx]); }
+  } else if (accVal && accVal.startsWith('all:')) {
+    // Replicate to all accounts of this firm
+    const firm = accVal.replace('all:','');
+    const firmAccs = propAccounts.filter(a => a.firm === firm);
+    firmAccs.forEach(a => {
+      const newTrade = { id: Date.now() + Math.random(), ...tradeData, account_id: a.id };
+      trades.unshift(newTrade);
+      saveTradeDB(newTrade);
+    });
   } else {
     const newTrade = { id: Date.now(), ...tradeData };
     trades.unshift(newTrade);
@@ -4461,6 +4922,7 @@ function updateAnalyticsSetupCard() {
 // ─────────────── TABS ──────────────────────────────────────────
 function switchTab(name, el) {
   if (name === 'group' && currentUser && !currentGroup) loadGroup();
+  if (name === 'accounts') { loadPropAccounts(); }
   window.scrollTo({top: 0, behavior: 'smooth'});
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
