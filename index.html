@@ -142,9 +142,9 @@
   /* ─── HEADER ─────────────────────────────────── */
   header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: 30px 0 28px;
+    padding: 26px 0 24px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 32px;
+    margin-bottom: 28px;
   }
 
   .logo { display: flex; align-items: center; gap: 14px; }
@@ -456,9 +456,11 @@
 
   /* Day detail */
   .day-detail {
-    margin-top: 16px; background: var(--card-bg2);
-    border: 1px solid var(--border2); border-radius: 12px;
-    padding: 20px 24px; display: none;
+    margin-top: 16px;
+    background: linear-gradient(160deg, rgba(0,214,143,0.02) 0%, var(--card-bg2) 40%);
+    border: 1px solid var(--border2); border-radius: 14px;
+    padding: 22px 26px; display: none;
+    animation: tabFadeIn 0.2s ease;
   }
   .day-detail.open { display: block; }
   .day-detail-hdr { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 16px; }
@@ -1181,6 +1183,451 @@
     animation: heroFadeIn 0.7s ease forwards;
   }
 
+
+  /* ══════════════════════════════════════════
+     DASHBOARD VISUAL REFRESH
+  ══════════════════════════════════════════ */
+
+  /* ── Tabs: sleeker with pill active state ── */
+  .tabs {
+    display: flex; gap: 2px; margin-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+    padding: 0 2px;
+  }
+  .tab {
+    padding: 10px 20px; border: none; background: none;
+    color: var(--muted); font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 500; cursor: pointer;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+    transition: all 0.18s; letter-spacing: 0.1px;
+    display: flex; align-items: center; gap: 5px;
+    border-radius: 8px 8px 0 0;
+  }
+  .tab:hover:not(.active) { color: var(--text); background: rgba(255,255,255,0.03); }
+  .tab.active {
+    color: var(--accent); border-bottom-color: var(--accent);
+    background: rgba(0,214,143,0.04);
+  }
+  .tab span { opacity: 0.6; font-size: 11px; }
+  .tab.active span { opacity: 1; }
+
+  /* ── Stat cards: glow on hover, color accent line ── */
+  .stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 22px 24px 20px; min-height: 118px;
+    position: relative; overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+  }
+  .stat-card::after {
+    content: '';
+    position: absolute; bottom: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, transparent, var(--card-accent, var(--accent)), transparent);
+    opacity: 0; transition: opacity 0.25s;
+  }
+  .stat-card:hover {
+    border-color: var(--border2);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+    transform: translateY(-2px);
+  }
+  .stat-card:hover::after { opacity: 0.7; }
+  .stat-card:hover::before { opacity: 0.8; }
+
+  /* Card-specific accent colors */
+  .stat-card:nth-child(1) { --card-accent: #00d68f; }
+  .stat-card:nth-child(2) { --card-accent: #4da8ff; }
+  .stat-card:nth-child(3) { --card-accent: #00d68f; }
+  .stat-card:nth-child(4) { --card-accent: #f0435a; }
+  .stat-card:nth-child(5) { --card-accent: #f5c842; }
+  .stat-card:nth-child(6) { --card-accent: #9aa3b2; }
+  .stat-card:nth-child(7) { --card-accent: #f5c842; }
+
+  .stat-value {
+    font-family: 'Outfit', sans-serif;
+    font-size: 30px; font-weight: 700; line-height: 1;
+    letter-spacing: -1.5px; margin-bottom: 10px;
+    transition: transform 0.3s;
+  }
+  .stat-card:hover .stat-value { transform: scale(1.03); }
+
+  /* ── Logo upgrade ── */
+  .logo-mark {
+    font-size: 23px; font-weight: 800; letter-spacing: -1px; line-height: 1;
+    background: linear-gradient(135deg, #e4e8ef 60%, #9aa3b2);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .logo-mark span {
+    background: linear-gradient(135deg, #00d68f, #00ffb3);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  body.light .logo-mark { background: linear-gradient(135deg,#141820,#4a5468); -webkit-background-clip:text;background-clip:text; }
+  body.light .logo-mark span { background: linear-gradient(135deg,#00a96e,#00d68f); -webkit-background-clip:text;background-clip:text; }
+
+  /* ── Badge upgrade: arrows + glow ── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 6px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px; font-weight: 700; letter-spacing: 0.3px;
+    position: relative;
+  }
+  .badge-long {
+    background: rgba(0,214,143,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,214,143,0.2);
+    box-shadow: 0 0 8px rgba(0,214,143,0.08);
+  }
+  .badge-short {
+    background: rgba(240,67,90,0.1);
+    color: var(--red);
+    border: 1px solid rgba(240,67,90,0.2);
+    box-shadow: 0 0 8px rgba(240,67,90,0.08);
+  }
+
+  /* ── Card title: cleaner ── */
+  .card-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px; font-weight: 700; letter-spacing: 0.5px;
+    color: var(--text2); text-transform: uppercase;
+    margin-bottom: 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+
+  /* ── Table upgrade: cleaner rows ── */
+  thead th {
+    font-family: 'Outfit', sans-serif; font-size: 10px; font-weight: 700;
+    color: var(--muted); letter-spacing: 0.8px; text-align: left;
+    text-transform: uppercase;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+  }
+  tbody td { padding: 14px 14px; font-size: 13px; }
+  tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  tbody tr:hover { background: rgba(0,214,143,0.025) !important; }
+
+  /* ── Win rate ring: bigger glow ── */
+  .ring-fill {
+    filter: drop-shadow(0 0 10px rgba(0,214,143,0.5));
+  }
+  .ring-fill.red { filter: drop-shadow(0 0 10px rgba(240,67,90,0.5)); }
+  .ring-pct { font-size: 28px; }
+
+  /* ── Symbol bar: thicker ── */
+  .ativo-bar-wrap { height: 4px; background: var(--border); border-radius: 3px; }
+  .ativo-bar { height: 4px; border-radius: 3px; }
+
+  /* ── Sync indicator: pulse animation ── */
+  @keyframes syncPulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.85); }
+  }
+  #syncDot.saving { animation: syncPulse 1s infinite; }
+
+  /* ── Tab content fade in ── */
+  .tab-content.active {
+    animation: tabFadeIn 0.25s ease;
+  }
+  @keyframes tabFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── Stat cards stagger animation ── */
+  @keyframes cardSlideUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .stat-card { animation: cardSlideUp 0.4s ease both; }
+  .stat-card:nth-child(1){animation-delay:0.03s}
+  .stat-card:nth-child(2){animation-delay:0.07s}
+  .stat-card:nth-child(3){animation-delay:0.11s}
+  .stat-card:nth-child(4){animation-delay:0.15s}
+  .stat-card:nth-child(5){animation-delay:0.19s}
+  .stat-card:nth-child(6){animation-delay:0.23s}
+  .stat-card:nth-child(7){animation-delay:0.27s}
+
+  /* ── Card hover glow for colored cards ── */
+  .stat-card--hero:hover { box-shadow: 0 8px 40px rgba(0,214,143,0.12), 0 0 0 1px rgba(0,214,143,0.08) !important; }
+  .stat-card--perfect:hover { box-shadow: 0 8px 40px rgba(0,214,143,0.1) !important; }
+  .stat-card--bad:hover     { box-shadow: 0 8px 40px rgba(240,67,90,0.1) !important; }
+
+  /* ── Yearly calendar: subtle row hover ── */
+  .yearly-cal tbody tr:hover td { background: rgba(0,214,143,0.03); }
+
+  /* ── Volume log: card hover ── */
+  .volume-day {
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .volume-day:hover {
+    border-color: rgba(0,214,143,0.2);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  }
+
+  /* ── Calendar cells: smoother hover ── */
+  .cal-cell.clickable:hover {
+    transform: scale(1.05);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.65);
+    z-index: 2;
+  }
+
+  /* ── Header: add bottom glow line ── */
+  header {
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  header::after {
+    content: '';
+    position: absolute; bottom: -1px; left: 0; right: 0; height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,214,143,0.3) 40%, rgba(0,214,143,0.3) 60%, transparent 100%);
+    opacity: 0.5;
+  }
+
+  /* ── Profit values: slightly larger ── */
+  .profit-pos { font-size: 14px; font-weight: 700; }
+  .profit-neg { font-size: 14px; font-weight: 600; }
+
+  /* ── Card inner spacing ── */
+  .card { border-radius: 16px; }
+
+  /* ── Streak pips: more rounded ── */
+  .streak-pip { border-radius: 8px; font-size: 12px; }
+
+  /* ── Scrollbar: thinner and greener ── */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-thumb { background: rgba(0,214,143,0.2); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(0,214,143,0.4); }
+
+  /* ── Button primary: subtle inner glow ── */
+  .btn-primary {
+    box-shadow: 0 4px 16px rgba(0,214,143,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+  }
+  .btn-primary:hover {
+    box-shadow: 0 8px 28px rgba(0,214,143,0.35), inset 0 1px 0 rgba(255,255,255,0.15);
+  }
+
+  /* ── Modal: glassmorphism style ── */
+  .modal {
+    backdrop-filter: blur(20px);
+    box-shadow: 0 48px 100px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  /* ── Stat label dot: pulse on hero card ── */
+  .stat-card--hero .stat-label-dot {
+    animation: dotPulse 2.5s ease-in-out infinite;
+  }
+  @keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,214,143,0.5); }
+    50% { box-shadow: 0 0 0 5px rgba(0,214,143,0); }
+  }
+
+  /* ── Number count-up on stat cards ── */
+  .stat-value { transition: all 0.3s ease; }
+
+  /* ── Setup report table: alternating subtle rows ── */
+  #setupReportTable tbody tr:nth-child(even) { background: rgba(255,255,255,0.01); }
+
+  /* ── Action button: cleaner ── */
+  .action-btn {
+    border-radius: 7px; font-size: 11px; font-weight: 600;
+    padding: 5px 12px; letter-spacing: 0.2px;
+    transition: all 0.15s;
+  }
+
+  /* ── Week card: hover ── */
+  .week-card {
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .week-card:hover { border-color: var(--border2); background: var(--card-bg2); }
+
+
+  /* Subtle noise texture on app bg */
+  .app::before {
+    content: '';
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    background-size: 200px;
+    opacity: 0.018;
+  }
+
+  /* ── WL items in win/rate card: show flat too ── */
+  .wl-item.f { background: rgba(150,160,180,0.08); }
+  .wl-item.f .wl-num { color: var(--muted); }
+
+  /* ── Yearly cal: row hover ── */
+  .yearly-cal tbody tr { transition: background 0.12s; }
+
+  /* ── Ativo row: hover ── */
+  .ativo-row { transition: background 0.12s; border-radius: 6px; padding: 10px 6px; margin: 0 -6px; }
+  .ativo-row:hover { background: rgba(255,255,255,0.025); }
+
+  /* ── Cal cell: today ring ── */
+  .cal-cell.today-marker {
+    border-color: rgba(58,138,255,0.6) !important;
+    box-shadow: 0 0 0 1px rgba(58,138,255,0.2), inset 0 0 12px rgba(58,138,255,0.06);
+  }
+
+  /* ── Modal input focus: smoother ── */
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,214,143,0.08), 0 2px 8px rgba(0,0,0,0.2);
+  }
+
+  /* ── Card: inner glow on hero ── */
+  .stat-card--hero {
+    background: linear-gradient(160deg, rgba(0,214,143,0.04) 0%, var(--card-bg) 60%) !important;
+  }
+
+  /* ── Setup card: hover ── */
+  .setup-card {
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .setup-card:hover {
+    border-color: rgba(0,214,143,0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.35);
+  }
+
+  /* ── Streak pip: hover tooltip ── */
+  .streak-pip { position: relative; }
+
+  /* ── Header date badge: animated on load ── */
+  .date-badge {
+    animation: cardSlideUp 0.5s ease 0.1s both;
+  }
+
+  /* ── Btn primary: font upgrade ── */
+  .btn-primary { letter-spacing: 0.3px; }
+
+  /* ── EV bar: rounder ── */
+  .ev-bar-track { border-radius: 4px; }
+  .ev-bar-fill { border-radius: 4px; }
+
+
+  /* ── Setup Card (Analytics) — redesigned ── */
+  .sc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    margin-top: 4px;
+  }
+  .sc-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  }
+  .sc-card:hover {
+    border-color: rgba(0,214,143,0.22);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(0,0,0,0.4);
+  }
+  .sc-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .sc-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .sc-tag {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    line-height: 1;
+  }
+  .sc-tag-icon { font-size: 13px; flex-shrink: 0; }
+  .sc-tag-key {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    opacity: 0.6;
+    flex-shrink: 0;
+    min-width: 60px;
+  }
+  .sc-tag-val {
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sc-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 10px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .sc-kpi {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .sc-kpi-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .sc-kpi-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .sc-kpi-bar {
+    height: 3px;
+    background: var(--border2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 2px;
+  }
+
+
+  /* ── Setup Report Table Pills ── */
+  .sr-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    align-items: center;
+  }
+  .sr-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    letter-spacing: 0.1px;
+    line-height: 1.2;
+  }
+  /* Make setup report table rows taller to fit pills */
+  #setupReportTable tbody td { padding: 10px 14px; vertical-align: middle; }
+  #setupReportTable tbody tr { border-bottom: 1px solid var(--border); }
+  #setupReportTable tbody tr:hover { background: rgba(0,214,143,0.02) !important; }
+
 </style>
 </head>
 <body>
@@ -1365,10 +1812,15 @@
   <!-- HEADER -->
   <header>
     <div class="logo">
-      <div class="logo-icon">📈</div>
+      <div class="logo-icon">
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <polyline points="2,14 7,8 11,11 18,4" stroke="#00d68f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="14,4 18,4 18,8" stroke="#00d68f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
       <div class="logo-text">
         <div class="logo-mark">GAL<span>T</span></div>
-        <div class="logo-sub">Trade Journal</div>
+        <div class="logo-sub"><span style="color:var(--accent);margin-right:4px">●</span>Trade Journal</div>
       </div>
     </div>
     <div class="header-right">
@@ -1377,6 +1829,7 @@
         <span id="syncLabel" style="font-family:Outfit,sans-serif;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:0.3px">Saved</span>
       </div>
       <div class="date-badge" id="todayDate"></div>
+      <div id="todayBadge" style="display:none;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;padding:7px 14px;border-radius:8px;background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.2);color:var(--accent);letter-spacing:0.2px"></div>
       <div class="mode-switch" onclick="toggleMode()" title="Toggle light/dark mode">
         <span class="mode-switch-icon" id="modeIcon">🌙</span>
         <div class="mode-toggle-track" id="modeTrack">
@@ -1427,13 +1880,13 @@
 
   <!-- TABS -->
   <div class="tabs">
-    <button class="tab active" onclick="switchTab('dashboard',this)">Dashboard</button>
-    <button class="tab" onclick="switchTab('analytics',this)">Analytics</button>
-    <button class="tab" onclick="switchTab('setups',this)">Setup Report</button>
-    <button class="tab" onclick="switchTab('history',this)">History</button>
-    <button class="tab" onclick="switchTab('calendar',this)">Calendar</button>
-    <button class="tab" onclick="switchTab('accounts',this)" id="accountsTabBtn">Accounts</button>
-    <button class="tab" onclick="switchTab('group',this)" id="groupTabBtn">Group</button>
+    <button class="tab active" onclick="switchTab('dashboard',this)"><span style="margin-right:6px">⬡</span>Dashboard</button>
+    <button class="tab" onclick="switchTab('analytics',this)"><span style="margin-right:6px">◈</span>Analytics</button>
+    <button class="tab" onclick="switchTab('setups',this)"><span style="margin-right:6px">◎</span>Setups</button>
+    <button class="tab" onclick="switchTab('history',this)"><span style="margin-right:6px">≡</span>History</button>
+    <button class="tab" onclick="switchTab('calendar',this)"><span style="margin-right:6px">▦</span>Calendar</button>
+    <button class="tab" onclick="switchTab('accounts',this)" id="accountsTabBtn"><span style="margin-right:6px">◉</span>Accounts</button>
+    <button class="tab" onclick="switchTab('group',this)" id="groupTabBtn"><span style="margin-right:6px">◈</span>Group</button>
   </div>
 
   <!-- ▸ DASHBOARD ────────────────────────────────── -->
@@ -1497,7 +1950,7 @@
         <div class="card-title">Cumulative Net P&amp;L <span class="card-title-right" id="chart-sub"></span></div>
         <div class="chart-wrap" style="height:210px"><canvas id="pnlChart"></canvas></div>
       </div>
-      <div class="card" style="max-width:260px">
+      <div class="card">
         <div class="card-title">Trade Win Rate</div>
         <div class="winrate-ring">
           <div class="ring-container">
@@ -1512,8 +1965,9 @@
           </div>
         </div>
         <div class="win-loss-bar">
-          <div class="wl-item w"><div class="wl-num" id="wlWins">0</div><div class="wl-label">W</div></div>
-          <div class="wl-item l"><div class="wl-num" id="wlLosses">0</div><div class="wl-label">L</div></div>
+          <div class="wl-item w"><div class="wl-num" id="wlWins">0</div><div class="wl-label">Wins</div></div>
+          <div class="wl-item f" style="flex:0.7;background:rgba(150,160,180,0.07);text-align:center;padding:12px 8px;border-radius:10px"><div class="wl-num" id="wlFlats" style="font-size:18px;color:var(--muted)">0</div><div class="wl-label">Flat</div></div>
+          <div class="wl-item l"><div class="wl-num" id="wlLosses">0</div><div class="wl-label">Loss</div></div>
         </div>
       </div>
     </div>
@@ -1747,12 +2201,9 @@
               <th>Trend</th>
               <th>Formation</th>
               <th>Candle</th>
-              <th>EMA</th>
-              <th>Session</th>
               <th>Side</th>
               <th>Trades</th>
               <th>Win Rate</th>
-              <th>Avg P&amp;L</th>
               <th>Avg Win</th>
               <th>Avg Loss</th>
               <th>Expectancy</th>
@@ -3028,6 +3479,7 @@ let isRetrying = false;
 
 function setSyncState(state) {
   const dot   = document.getElementById('syncDot');
+  if (dot) dot.className = state === 'saving' ? 'saving' : '';
   const label = document.getElementById('syncLabel');
   const wrap  = document.getElementById('syncIndicator');
   if (!dot) return;
@@ -3467,8 +3919,11 @@ function fmtShort(v) {
   return a >= 10000 ? s+'$'+(a/1000).toFixed(1)+'k' : s+'$'+a.toFixed(2);
 }
 function starsHtml(n, size='') {
-  if (!n) return '<span style="color:var(--muted);font-size:13px;font-family:Outfit,sans-serif">—</span>';
-  return '<span class="stars-sm">' + '★'.repeat(n) + '<span style="opacity:0.2">'+'★'.repeat(5-n)+'</span></span>';
+  if (!n) return '<span style="color:var(--muted);font-size:12px;font-family:Outfit,sans-serif;letter-spacing:1px">—</span>';
+  const col = n >= 4 ? '#00d68f' : n >= 3 ? '#f5c842' : '#f0435a';
+  return '<span class="stars-sm" style="color:' + col + ';filter:drop-shadow(0 0 4px ' + col + '44)">'
+    + '★'.repeat(n)
+    + '<span style="opacity:0.15;color:var(--muted)">' + '★'.repeat(5-n) + '</span></span>';
 }
 
 // ─────────────── INIT ──────────────────────────────────────────
@@ -4122,6 +4577,15 @@ function updateStats() {
   document.getElementById('wlWins').textContent   = wins.length;
   document.getElementById('wlLosses').textContent = losses.length;
   document.getElementById('wlFlats') && (document.getElementById('wlFlats').textContent = flats.length);
+
+  // Animate stat cards on update
+  document.querySelectorAll('.stat-card').forEach((card, i) => {
+    card.style.animationDelay = (i * 0.04) + 's';
+    card.style.animation = 'none';
+    void card.offsetWidth;
+    card.style.animation = '';
+  });
+
 }
 
 
@@ -4187,7 +4651,7 @@ function initChart() {
     type: 'line',
     data: { labels:[], datasets:[{
       label: 'Net P&L', data: [],
-      borderColor:'#00d68f', backgroundColor:'rgba(0,214,143,0.07)',
+      borderColor:'#00d68f', backgroundColor:'rgba(0,214,143,0.05)',
       borderWidth: 2.5, pointRadius: 3.5, pointBackgroundColor:'#00d68f',
       tension: 0.35, fill: true
     }]},
@@ -4196,9 +4660,10 @@ function initChart() {
       plugins:{
         legend:{display:false},
         tooltip:{
-          backgroundColor:'#0f1216', borderColor:'#232a34', borderWidth:1,
-          titleColor:'#525e72', bodyColor:'#e4e8ef',
-          bodyFont:{family:'Outfit',size:13},
+          backgroundColor:'rgba(10,13,18,0.96)', borderColor:'rgba(0,214,143,0.2)', borderWidth:1,
+          titleColor:'#6b7588', bodyColor:'#e4e8ef', padding:12,
+          titleFont:{family:'Outfit',size:11,weight:'600'},
+          bodyFont:{family:'DM Mono',size:13},
           callbacks:{label: c => ' $'+fmtN(c.parsed.y)}
         }
       },
@@ -4237,7 +4702,7 @@ function tradeRowShort(t) {
   return `<tr>
     <td class="mono" style="font-size:11px;white-space:nowrap;color:var(--text2)">${ds}</td>
     <td class="td-sym">${t.ativo}</td>
-    <td><span class="badge badge-${t.tipo.toLowerCase()}">${t.tipo}</span></td>
+    <td><span class="badge badge-${t.tipo.toLowerCase()}">${t.tipo==='LONG'?'↑ ':'↓ '}${t.tipo}</span></td>
     <td class="mono" style="color:var(--text2)">${t.qtd||1}</td>
     <td class="${cls}">${fmtS(t.net)}</td>
     <td class="mono" style="color:var(--yellow)">-$${fmtN(Math.abs(t.comm||0))}</td>
@@ -4261,7 +4726,7 @@ function tradeRowFull(t) {
   const mainRow = `<tr class="trade-main-row" onclick="toggleTradeDetail('${detailId}', this)">
     <td class="mono" style="font-size:11px;white-space:nowrap;color:var(--text2)">${ds}</td>
     <td class="td-sym">${t.ativo}</td>
-    <td><span class="badge badge-${t.tipo.toLowerCase()}">${t.tipo}</span></td>
+    <td><span class="badge badge-${t.tipo.toLowerCase()}">${t.tipo==='LONG'?'↑ ':'↓ '}${t.tipo}</span></td>
     <td class="mono" style="color:var(--text2)">${t.qtd||1}</td>
     <td class="mono" style="color:var(--text2)">${fmtS(t.gross)}</td>
     <td class="${cls}">${fmtS(t.net)}</td>
@@ -5169,26 +5634,51 @@ function updateSetupReport() {
     const barNeg = r.expect < 0 ? 'neg' : '';
     const sideCls= r.side==='LONG' ? 'badge-long' : 'badge-short';
 
+    // Helper: render a clean cell chip
+    const chip = (icon, label, col, bg) => label && label !== '—'
+      ? `<span style="display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:7px;background:${bg};color:${col};font-family:'Outfit',sans-serif;font-size:12px;font-weight:600;white-space:nowrap;border:1px solid ${col}28">
+           <span style="font-size:11px;opacity:0.85">${icon}</span>${label}
+         </span>`
+      : `<span style="color:var(--muted);font-size:12px;font-family:'Outfit',sans-serif">—</span>`;
+
+    const trendChip = v => {
+      if (!v||v==='—') return chip('','—','','');
+      const m = {Up:['📈','#00d68f','rgba(0,214,143,0.1)'], Down:['📉','#f0435a','rgba(240,67,90,0.1)'], Sideways:['↔','#9aa3b2','rgba(150,160,180,0.1)']}[v]||['·','#9aa3b2','rgba(150,160,180,0.1)'];
+      return chip(m[0], v, m[1], m[2]);
+    };
+    const formChip = v => chip('🕯', v&&v!=='—'?v:null, '#f5c842', 'rgba(245,200,66,0.08)');
+    const colorChip = v => {
+      if (!v||v==='—') return chip('','—','','');
+      return v==='Green' ? chip('🟢','Green','#00d68f','rgba(0,214,143,0.1)') : chip('🔴','Red','#f0435a','rgba(240,67,90,0.1)');
+    };
+    const stratChip = v => chip('◈', v&&v!=='—'?v:null, '#4da8ff', 'rgba(77,168,255,0.08)');
+
     return `<tr>
-      <td class="setup-combo-cell" style="font-weight:700;color:var(--text)">${r.strategy!=='—'?r.strategy:'<span style="color:var(--muted)">—</span>'}</td>
-      <td>${trendBadge(r.trend)}</td>
-      <td class="setup-combo-cell">${r.form}</td>
-      <td>${colorBadge(r.color)}</td>
-      <td style="color:var(--text2);font-size:12px;font-weight:500">${r.ema!=='—'?r.ema:'<span style="color:var(--muted)">—</span>'}</td>
-      <td style="color:var(--text2);font-size:12px">${r.session!=='—'?r.session:'<span style="color:var(--muted)">—</span>'}</td>
-      <td><span class="badge ${sideCls}">${r.side}</span></td>
-      <td style="font-weight:600;color:var(--text2)">${r.n}</td>
-      <td class="${wrCls}" style="font-weight:700">${r.wr}%</td>
-      <td class="${r.avgPnl>20?'profit-pos':r.avgPnl<-20?'profit-neg':'profit-flat'}" style="font-weight:600">${fmtS(r.avgPnl)}</td>
-      <td class="profit-pos">${r.avgWin ? fmtS(r.avgWin) : '—'}</td>
-      <td class="profit-neg">${r.avgLoss ? fmtS(r.avgLoss) : '—'}</td>
-      <td>
-        <div class="ev-bar">
-          <span class="${expCls}" style="font-weight:700;min-width:60px">${fmtS(r.expect)}</span>
-          <div class="ev-bar-track"><div class="ev-bar-fill ${barNeg}" style="width:${barPct}%"></div></div>
+      <td style="padding:12px 14px">${stratChip(r.strategy)}</td>
+      <td style="padding:12px 14px">${trendChip(r.trend)}</td>
+      <td style="padding:12px 14px">${formChip(r.form)}</td>
+      <td style="padding:12px 14px">${colorChip(r.color)}</td>
+      <td style="padding:12px 14px"><span class="badge ${sideCls}">${r.side==='LONG'?'↑':'↓'} ${r.side}</span></td>
+      <td style="font-weight:700;color:var(--text2);font-family:'DM Mono',monospace;font-size:14px;padding:12px 14px">${r.n}</td>
+      <td style="padding:12px 14px">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <span class="${wrCls}" style="font-weight:700;font-size:15px;font-family:'Outfit',sans-serif">${r.wr}%</span>
+          <div style="width:52px;height:3px;background:var(--border2);border-radius:3px;overflow:hidden">
+            <div style="width:${r.wr}%;height:100%;background:${r.wr>=60?'#00d68f':r.wr<=40?'#f0435a':'#9aa3b2'};border-radius:3px"></div>
+          </div>
         </div>
       </td>
-      <td class="${r.total>20?'profit-pos':r.total<-20?'profit-neg':'profit-flat'}" style="font-weight:600">${fmtS(r.total)}</td>
+      <td class="profit-pos" style="font-weight:600;padding:12px 14px">${r.avgWin ? fmtS(r.avgWin) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td class="profit-neg" style="font-weight:600;padding:12px 14px">${r.avgLoss ? fmtS(r.avgLoss) : '<span style="color:var(--muted)">—</span>'}</td>
+      <td style="padding:12px 14px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <span class="${expCls}" style="font-weight:700;font-size:14px;font-family:'Outfit',sans-serif">${fmtS(r.expect)}</span>
+          <div style="width:52px;height:3px;background:var(--border2);border-radius:3px;overflow:hidden">
+            <div style="width:${barPct}%;height:100%;background:${r.expect>20?'#00d68f':r.expect<-20?'#f0435a':'#9aa3b2'};border-radius:3px"></div>
+          </div>
+        </div>
+      </td>
+      <td class="${r.total>20?'profit-pos':r.total<-20?'profit-neg':'profit-flat'}" style="font-weight:700;font-size:15px;padding:12px 14px">${fmtS(r.total)}</td>
     </tr>`;
   }).join('');
 }
@@ -5196,14 +5686,14 @@ function updateSetupReport() {
 
 // ─── Analytics mini Setup Report card ──────────────────────────
 function updateAnalyticsSetupCard() {
-  const el = document.getElementById('setupReport');
+  const el    = document.getElementById('setupReport');
   const subEl = document.getElementById('setup-report-sub');
   if (!el) return;
 
   const FLAT = 20;
   const setupTrades = trades.filter(t => t.trend || t.candleColor || t.candleForm || t.strategy);
   if (!setupTrades.length) {
-    el.innerHTML = '<div style="color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:12px 0;">Log trades with Setup Context to see patterns here.</div>';
+    el.innerHTML = '<div style="color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:16px 0;">Log trades with Setup Context to see patterns here.</div>';
     if (subEl) subEl.textContent = '';
     return;
   }
@@ -5222,58 +5712,97 @@ function updateAnalyticsSetupCard() {
   });
 
   const rows = Object.values(groups).map(g => {
-    const n     = g.trades.length;
-    const wins  = g.trades.filter(t => t.net > FLAT);
-    const losses= g.trades.filter(t => t.net < -FLAT);
-    const wr    = n ? Math.round(wins.length / n * 100) : 0;
-    const avgWin = wins.length   ? wins.reduce((s,t)=>s+t.net,0)/wins.length   : 0;
-    const avgLoss= losses.length ? losses.reduce((s,t)=>s+t.net,0)/losses.length : 0;
+    const n      = g.trades.length;
+    const wins   = g.trades.filter(t => t.net > FLAT);
+    const losses = g.trades.filter(t => t.net < -FLAT);
+    const wr     = n ? Math.round(wins.length / n * 100) : 0;
+    const avgWin  = wins.length   ? wins.reduce((s,t)=>s+t.net,0)/wins.length   : 0;
+    const avgLoss = losses.length ? losses.reduce((s,t)=>s+t.net,0)/losses.length : 0;
     const wrR = n ? wins.length/n : 0;
     const lrR = n ? losses.length/n : 0;
     const expect = (wrR * avgWin) + (lrR * avgLoss);
-    return { ...g, n, wr, expect };
+    const total  = g.trades.reduce((s,t)=>s+t.net,0);
+    return { ...g, n, wr, expect, total, avgWin, avgLoss };
   }).sort((a,b) => b.expect - a.expect);
 
-  const top = rows.slice(0, 6); // show top 6
+  const top = rows.slice(0, 6);
 
-  const tagColor = (v, type) => {
+  // Tag builders — each tag on its own line with icon + label
+  const trendTag = v => {
     if (!v) return '';
-    if (type === 'trend') {
-      const c = v==='Up'?'rgba(0,214,143,0.15)':v==='Down'?'rgba(240,67,90,0.15)':'rgba(150,160,180,0.12)';
-      const t = v==='Up'?'var(--accent)':v==='Down'?'var(--red)':'var(--muted)';
-      return `<span class="setup-tag" style="background:${c};color:${t}">${v==='Up'?'📈':v==='Down'?'📉':'↔'} ${v}</span>`;
-    }
-    if (type === 'color') {
-      const c = v==='Green'?'rgba(0,214,143,0.15)':'rgba(240,67,90,0.15)';
-      const t = v==='Green'?'var(--accent)':'var(--red)';
-      return `<span class="setup-tag" style="background:${c};color:${t}">${v==='Green'?'🟢':'🔴'} ${v}</span>`;
-    }
-    return `<span class="setup-tag" style="background:rgba(150,160,180,0.10);color:var(--text2)">${v}</span>`;
+    const cfg = { Up: ['#00d68f','rgba(0,214,143,0.12)','📈','Uptrend'],
+                  Down: ['#f0435a','rgba(240,67,90,0.12)','📉','Downtrend'],
+                  Sideways: ['#9aa3b2','rgba(150,160,180,0.10)','↔','Sideways'] };
+    const [col, bg, icon, label] = cfg[v] || ['#9aa3b2','rgba(150,160,180,0.10)','·', v];
+    return `<div class="sc-tag" style="background:${bg};color:${col};border-color:${col}22">
+      <span class="sc-tag-icon">${icon}</span><span class="sc-tag-key">Trend</span><span class="sc-tag-val">${label}</span>
+    </div>`;
+  };
+  const formTag = v => {
+    if (!v) return '';
+    return `<div class="sc-tag" style="background:rgba(245,200,66,0.08);color:#f5c842;border-color:rgba(245,200,66,0.2)">
+      <span class="sc-tag-icon">🕯</span><span class="sc-tag-key">Formation</span><span class="sc-tag-val">${v}</span>
+    </div>`;
+  };
+  const colorTag = v => {
+    if (!v) return '';
+    const cfg = { Green: ['#00d68f','rgba(0,214,143,0.10)','🟢'], Red: ['#f0435a','rgba(240,67,90,0.10)','🔴'] };
+    const [col, bg, icon] = cfg[v] || ['#9aa3b2','rgba(150,160,180,0.10)','⬜'];
+    return `<div class="sc-tag" style="background:${bg};color:${col};border-color:${col}22">
+      <span class="sc-tag-icon">${icon}</span><span class="sc-tag-key">Candle</span><span class="sc-tag-val">${v}</span>
+    </div>`;
+  };
+  const stratTag = v => {
+    if (!v) return '';
+    return `<div class="sc-tag" style="background:rgba(77,168,255,0.08);color:#4da8ff;border-color:rgba(77,168,255,0.2)">
+      <span class="sc-tag-icon">◈</span><span class="sc-tag-key">Strategy</span><span class="sc-tag-val">${v}</span>
+    </div>`;
   };
 
-  el.innerHTML = `<div class="setup-report-grid">${top.map(r => {
-    const expCls = r.expect > 20 ? 'profit-pos' : r.expect < -20 ? 'profit-neg' : 'profit-flat';
-    const wrCls  = r.wr >= 60 ? 'profit-pos' : r.wr <= 35 ? 'profit-neg' : '';
+  el.innerHTML = `<div class="sc-grid">${top.map((r, idx) => {
+    const expCls  = r.expect > 20 ? '#00d68f' : r.expect < -20 ? '#f0435a' : '#9aa3b2';
+    const wrBg    = r.wr >= 60 ? 'rgba(0,214,143,0.1)' : r.wr <= 35 ? 'rgba(240,67,90,0.1)' : 'rgba(150,160,180,0.08)';
+    const wrCol   = r.wr >= 60 ? '#00d68f' : r.wr <= 35 ? '#f0435a' : '#9aa3b2';
     const sideCls = r.side === 'LONG' ? 'badge-long' : 'badge-short';
-    const tags = [
-      r.strategy ? tagColor(r.strategy, 'strategy') : '',
-      r.trend    ? tagColor(r.trend,    'trend')    : '',
-      r.form     ? tagColor(r.form,     'form')     : '',
-      r.color    ? tagColor(r.color,    'color')    : '',
-    ].filter(Boolean).join(' ');
+    const sideArrow = r.side === 'LONG' ? '↑' : '↓';
+    const rank    = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
 
-    return `<div class="setup-card">
-      <div class="setup-card-title">
-        ${tags}
-        <span class="badge ${sideCls}" style="font-size:10px;padding:2px 7px">${r.side}</span>
+    // Win rate arc: simple CSS conic
+    const wrDeg   = Math.round(r.wr * 3.6);
+
+    return `<div class="sc-card">
+      <!-- Header row: rank + side badge -->
+      <div class="sc-card-head">
+        <div style="display:flex;align-items:center;gap:8px">
+          ${rank ? `<span style="font-size:16px;line-height:1">${rank}</span>` : ''}
+          <span class="badge ${sideCls}" style="font-size:11px;padding:4px 10px;letter-spacing:0.3px">${sideArrow} ${r.side}</span>
+        </div>
+        <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)">${r.n} trade${r.n!==1?'s':''}</div>
       </div>
-      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:6px">
-        <div><div style="font-size:10px;color:var(--muted);font-family:Outfit,sans-serif;margin-bottom:2px">TRADES</div>
-          <div style="font-size:15px;font-weight:700;font-family:Outfit,sans-serif;color:var(--text2)">${r.n}</div></div>
-        <div><div style="font-size:10px;color:var(--muted);font-family:Outfit,sans-serif;margin-bottom:2px">WIN RATE</div>
-          <div style="font-size:15px;font-weight:700;font-family:Outfit,sans-serif" class="${wrCls}">${r.wr}%</div></div>
-        <div><div style="font-size:10px;color:var(--muted);font-family:Outfit,sans-serif;margin-bottom:2px">EXPECTANCY</div>
-          <div style="font-size:15px;font-weight:700;font-family:Outfit,sans-serif" class="${expCls}">${fmtS(r.expect)}</div></div>
+
+      <!-- Tags: each on its own row -->
+      <div class="sc-tags">
+        ${stratTag(r.strategy)}
+        ${trendTag(r.trend)}
+        ${formTag(r.form)}
+        ${colorTag(r.color)}
+      </div>
+
+      <!-- Stats row: 3 KPIs -->
+      <div class="sc-stats">
+        <div class="sc-kpi">
+          <div class="sc-kpi-label">Win Rate</div>
+          <div class="sc-kpi-val" style="color:${wrCol}">${r.wr}%</div>
+          <div class="sc-kpi-bar"><div style="width:${r.wr}%;background:${wrCol};height:100%;border-radius:3px;transition:width 0.4s"></div></div>
+        </div>
+        <div class="sc-kpi">
+          <div class="sc-kpi-label">Expectancy</div>
+          <div class="sc-kpi-val" style="color:${expCls}">${fmtS(r.expect)}</div>
+        </div>
+        <div class="sc-kpi">
+          <div class="sc-kpi-label">Total P&L</div>
+          <div class="sc-kpi-val" style="color:${r.total>20?'#00d68f':r.total<-20?'#f0435a':'#9aa3b2'}">${fmtS(r.total)}</div>
+        </div>
       </div>
     </div>`;
   }).join('')}</div>`;
