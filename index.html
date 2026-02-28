@@ -1533,7 +1533,7 @@
             <tr>
               <th>Date / Time</th><th>Symbol</th><th>Side</th><th>Qty</th>
               <th>Gross P&amp;L</th><th>Net P&amp;L</th><th>Commission</th>
-              <th>Rating</th><th></th>
+              <th>Account</th><th>Rating</th><th></th>
             </tr>
           </thead>
           <tbody id="fullTableBody">
@@ -3933,6 +3933,7 @@ function tradeRowShort(t) {
     <td class="mono" style="color:var(--text2)">${t.qtd||1}</td>
     <td class="${cls}">${fmtS(t.net)}</td>
     <td class="mono" style="color:var(--yellow)">-$${fmtN(Math.abs(t.comm||0))}</td>
+    <td style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">${t.account_id ? (propAccounts.find(a=>a.id===t.account_id)?.nickname||'—') : '—'}</td>
     <td>${starsHtml(t.rating)}</td>
   </tr>`;
 }
@@ -3957,6 +3958,7 @@ function tradeRowFull(t) {
     <td class="mono" style="color:var(--text2)">${fmtS(t.gross)}</td>
     <td class="${cls}">${fmtS(t.net)}</td>
     <td class="mono" style="color:var(--yellow)">-$${fmtN(Math.abs(t.comm||0))}</td>
+    <td style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">${t.account_id ? (propAccounts.find(a=>a.id===t.account_id)?.nickname||'—') : '—'}</td>
     <td>${starsHtml(t.rating)}</td>
     <td style="white-space:nowrap">
       <button class="action-btn edit-btn" onclick="event.stopPropagation();editTrade(${t.id})">Edit</button>
@@ -3965,7 +3967,7 @@ function tradeRowFull(t) {
   </tr>`;
 
   const detailRow = `<tr class="trade-detail-row">
-    <td colspan="8">
+    <td colspan="9">
       <div class="trade-detail-inner" id="${detailId}">
         <div class="trade-detail-notes">
           <div class="trade-detail-label">📝 Trade Log</div>
@@ -4040,7 +4042,7 @@ function updateFullTable() {
   document.getElementById('total-count').textContent = total ? `${total} trade${total!==1?'s':''} · ${ntCount} no-trade day${ntCount!==1?'s':''}` : '';
 
   if (!all.length) {
-    document.getElementById('fullTableBody').innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:26px;font-family:Outfit,sans-serif;font-size:13px;">No trades yet. Click "+ New Trade" to begin.</td></tr>';
+    document.getElementById('fullTableBody').innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:26px;font-family:Outfit,sans-serif;font-size:13px;">No trades yet. Click "+ New Trade" to begin.</td></tr>';
     document.getElementById('historyPagination').style.display = 'none';
     return;
   }
