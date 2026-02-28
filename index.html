@@ -3046,9 +3046,10 @@ async function saveTradeDB(t) {
       account_id: t.account_id || null,
       user_id: currentUser?.id
     };
-    // Check if trade exists in DB (has a numeric id = local, uuid = already in DB)
-    const isExisting = typeof t.id === 'string' && t.id.includes('-');
-    if (isExisting) {
+    // Always use PATCH if trade has a DB id (any string uuid or numeric id from supabase)
+    // First try to find if this trade exists in DB
+    const checkRes = await sbFetch('trades?id=eq.' + t.id + '&select=id');
+    if (checkRes && checkRes.length > 0) {
       await sbFetch('trades?id=eq.' + t.id, {
         method: 'PATCH',
         headers: { 'Prefer': 'return=representation' },
