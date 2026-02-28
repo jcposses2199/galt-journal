@@ -2169,18 +2169,14 @@ function renderConsolidated(el) {
   h += renderAccStat(passing, 'Ready for Payout', 'var(--accent)');
   const atRisk = stats.filter(x => x.s.status === 'at_risk').length;
   h += renderAccStat(atRisk, 'At Risk', atRisk>0?'var(--red)':'var(--muted)');
-  h += '</div><div style="display:flex;flex-direction:column;gap:14px">';
+  h += '</div><div style="display:flex;flex-direction:column;gap:14px" id="consolidatedCards">';
 
   stats.forEach(({a,s}) => {
     const sc = statusColors[s.status];
     const sl = statusLabels[s.status];
     const tPct = Math.round(s.targetProg * 100);
     const dPct = Math.round(s.ddProg * 100);
-    const div = document.createElement('div');
-    div.className = 'card';
-    div.style.cursor = 'pointer';
-    div.onclick = () => selectAccount(a.id, null);
-    div.innerHTML =
+    h += '<div class="card" style="cursor:pointer" data-acc-id="' + a.id + '">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">' +
         '<div>' +
           '<div style="font-family:Outfit,sans-serif;font-size:15px;font-weight:700">' + a.nickname + '</div>' +
@@ -2199,12 +2195,21 @@ function renderConsolidated(el) {
           '<div style="font-family:DM Mono,monospace;font-size:13px;font-weight:600;color:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '">$' + s.remainingDD.toFixed(0) + ' / $' + a.trailing_drawdown.toLocaleString() + '</div>' +
           '<div class="acc-progress-bar"><div class="acc-progress-fill" style="width:' + dPct + '%;background:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '"></div></div>' +
         '</div>' +
-      '</div>';
-    h += div.outerHTML;
+      '</div>' +
+    '</div>';
   });
 
   h += '</div>';
   el.innerHTML = h;
+
+  // Event delegation for card clicks
+  const cards = document.getElementById('consolidatedCards');
+  if (cards) {
+    cards.addEventListener('click', function(e) {
+      const card = e.target.closest('[data-acc-id]');
+      if (card) selectAccount(card.dataset.accId, null);
+    });
+  }
 }
 
 function renderSingleAccount(el, acc) {
@@ -2219,74 +2224,120 @@ function renderSingleAccount(el, acc) {
   const remaining = acc.profit_target - s.pnl;
   const estDays = avgPerDay > 0 ? Math.ceil(remaining / avgPerDay) : null;
 
-  const wrap = document.createElement('div');
-
-  // Header
-  const hdr = document.createElement('div');
-  hdr.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px';
-  const editBtn = document.createElement('button');
-  editBtn.textContent = '✏ Edit';
-  editBtn.style.cssText = 'background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer';
-  editBtn.onclick = () => openEditAccountModal(acc.id);
-  hdr.innerHTML =
-    '<div>' +
-      '<div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700">' + acc.nickname + '</div>' +
-      '<div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted)">' + acc.firm + ' · $' + acc.size.toLocaleString() + ' account</div>' +
-    '</div>' +
-    '<div style="display:flex;gap:8px;align-items:center">' +
-      '<div class="acc-status-badge" style="background:' + sc + '20;color:' + sc + '">' + sl + '</div>' +
-    '</div>';
-  hdr.querySelector('div:last-child').appendChild(editBtn);
-  wrap.appendChild(hdr);
-
-  // Stats grid
-  const grid = document.createElement('div');
-  grid.style.cssText = 'display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:20px';
-  grid.innerHTML =
-    renderAccStat((s.pnl>=0?'+$':'-$')+Math.abs(s.pnl).toFixed(2), 'Net P&L', s.pnl>0?'var(--accent)':s.pnl<0?'var(--red)':'var(--muted)') +
-    renderAccStat('$'+s.equity.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), 'Current Equity', 'var(--text)') +
-    renderAccStat('$'+s.floor.toFixed(2), 'DD Floor', 'var(--red)') +
-    renderAccStat('$'+s.remainingDD.toFixed(2), 'DD Buffer', dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') +
-    renderAccStat(s.tradingDays + (acc.min_trading_days ? ' / ' + acc.min_trading_days : ''), 'Trading Days', s.tradingDays >= acc.min_trading_days ? 'var(--accent)' : 'var(--yellow)') +
-    renderAccStat(estDays ? estDays + ' days' : '—', 'Est. to Payout', 'var(--muted)');
-  wrap.appendChild(grid);
-
-  // Progress bars card
-  const progCard = document.createElement('div');
-  progCard.className = 'card';
-  progCard.style.marginBottom = '20px';
-  progCard.innerHTML =
-    '<div style="margin-bottom:18px">' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
-        '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Profit Target</span>' +
-        '<span style="font-family:DM Mono,monospace;font-size:13px">' + (s.pnl>=0?'+$':'-$') + Math.abs(s.pnl).toFixed(2) + ' / $' + acc.profit_target.toLocaleString() + ' (' + tPct + '%)</span>' +
+  el.innerHTML =
+    // Header
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">' +
+      '<div>' +
+        '<div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700">' + acc.nickname + '</div>' +
+        '<div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted)">' + acc.firm + ' · $' + acc.size.toLocaleString() + ' account · Started ' + (acc.start_date || '—') + '</div>' +
       '</div>' +
-      '<div class="acc-progress-bar" style="height:12px"><div class="acc-progress-fill" style="width:' + tPct + '%;background:var(--accent)"></div></div>' +
-    '</div>' +
-    '<div>' +
-      '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
-        '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Trailing Drawdown Buffer</span>' +
-        '<span style="font-family:DM Mono,monospace;font-size:13px;color:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '">$' + s.remainingDD.toFixed(2) + ' / $' + acc.trailing_drawdown.toLocaleString() + ' (' + dPct + '%)</span>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<div class="acc-status-badge" style="background:' + sc + '20;color:' + sc + '">' + sl + '</div>' +
+        '<button id="editAccBtn" style="background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer">✏ Edit</button>' +
       '</div>' +
-      '<div class="acc-progress-bar" style="height:12px"><div class="acc-progress-fill" style="width:' + dPct + '%;background:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '"></div></div>' +
+    '</div>' +
+    // Stats
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px">' +
+      renderAccStat((s.pnl>=0?'+$':'-$')+Math.abs(s.pnl).toFixed(2), 'Net P&L', s.pnl>0?'var(--accent)':s.pnl<0?'var(--red)':'var(--muted)') +
+      renderAccStat('$'+s.equity.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), 'Current Equity', 'var(--text)') +
+      renderAccStat('$'+s.floor.toFixed(2), 'DD Floor', 'var(--red)') +
+      renderAccStat('$'+s.remainingDD.toFixed(2), 'DD Buffer', dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') +
+      renderAccStat(s.tradingDays + (acc.min_trading_days ? ' / ' + acc.min_trading_days : ''), 'Trading Days', s.tradingDays >= (acc.min_trading_days||0) ? 'var(--accent)' : 'var(--yellow)') +
+      renderAccStat(estDays ? estDays + ' days' : '—', 'Est. to Payout', 'var(--muted)') +
+    '</div>' +
+    // Progress bars
+    '<div class="card" style="margin-bottom:20px">' +
+      '<div style="margin-bottom:18px">' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+          '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Profit Target Progress</span>' +
+          '<span style="font-family:DM Mono,monospace;font-size:13px">' + (s.pnl>=0?'+$':'-$') + Math.abs(s.pnl).toFixed(2) + ' / $' + acc.profit_target.toLocaleString() + ' (' + tPct + '%)</span>' +
+        '</div>' +
+        '<div class="acc-progress-bar" style="height:14px"><div class="acc-progress-fill" style="width:' + tPct + '%;background:var(--accent)"></div></div>' +
+      '</div>' +
+      '<div>' +
+        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
+          '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Trailing Drawdown Buffer</span>' +
+          '<span style="font-family:DM Mono,monospace;font-size:13px;color:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '">$' + s.remainingDD.toFixed(2) + ' / $' + acc.trailing_drawdown.toLocaleString() + ' (' + dPct + '% safe)</span>' +
+        '</div>' +
+        '<div class="acc-progress-bar" style="height:14px"><div class="acc-progress-fill" style="width:' + dPct + '%;background:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '"></div></div>' +
+      '</div>' +
+    '</div>' +
+    // Equity chart
+    '<div class="card" style="margin-bottom:20px">' +
+      '<div class="card-title" style="margin-bottom:16px">Equity Curve <span class="card-title-right">vs DD Floor</span></div>' +
+      '<canvas id="accEquityChart" height="120"></canvas>' +
+    '</div>' +
+    // Rules
+    '<div class="card">' +
+      '<div class="card-title" style="margin-bottom:14px">Account Rules</div>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
+        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Profit Target</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--accent)">$' + acc.profit_target.toLocaleString() + '</div></div>' +
+        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Trailing DD</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.trailing_drawdown.toLocaleString() + '</div></div>' +
+        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Max Daily Loss</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.max_daily_loss.toLocaleString() + '</div></div>' +
+        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Min Trading Days</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700">' + (acc.min_trading_days||'—') + '</div></div>' +
+      '</div>' +
     '</div>';
-  wrap.appendChild(progCard);
 
-  // Rules card
-  const rulesCard = document.createElement('div');
-  rulesCard.className = 'card';
-  rulesCard.innerHTML =
-    '<div class="card-title" style="margin-bottom:14px">Account Rules</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
-      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Profit Target</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--accent)">$' + acc.profit_target.toLocaleString() + '</div></div>' +
-      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Trailing DD</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.trailing_drawdown.toLocaleString() + '</div></div>' +
-      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Max Daily Loss</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.max_daily_loss.toLocaleString() + '</div></div>' +
-      '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Min Trading Days</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700">' + (acc.min_trading_days||'—') + '</div></div>' +
-    '</div>';
-  wrap.appendChild(rulesCard);
+  // Wire up edit button
+  document.getElementById('editAccBtn').onclick = () => openEditAccountModal(acc.id);
 
-  el.innerHTML = '';
-  el.appendChild(wrap);
+  // Draw equity chart
+  renderAccEquityChart(acc, s);
+}
+
+function renderAccEquityChart(acc, s) {
+  const canvas = document.getElementById('accEquityChart');
+  if (!canvas || typeof Chart === 'undefined') return;
+
+  const accTrades = trades.filter(t => t.account_id === acc.id).sort((a,b) => new Date(a.datetime)-new Date(b.datetime));
+  if (!accTrades.length) { canvas.parentElement.style.display = 'none'; return; }
+
+  let equity = acc.initial_balance || acc.size;
+  let peak = equity;
+  let floor = equity - acc.trailing_drawdown;
+  const target = acc.profit_target;
+  const labels = ['Start'];
+  const equityData = [equity];
+  const floorData = [floor];
+  const targetLine = [equity + target];
+
+  accTrades.forEach(t => {
+    equity += parseFloat(t.net)||0;
+    if (equity > peak) {
+      const gained = equity - (acc.initial_balance || acc.size);
+      if (gained < target) { peak = equity; floor = peak - acc.trailing_drawdown; }
+    }
+    labels.push(new Date(t.datetime).toLocaleDateString('en-US',{month:'short',day:'numeric'}));
+    equityData.push(parseFloat(equity.toFixed(2)));
+    floorData.push(parseFloat(floor.toFixed(2)));
+    targetLine.push(parseFloat(((acc.initial_balance||acc.size) + target).toFixed(2)));
+  });
+
+  if (canvas._chartInst) canvas._chartInst.destroy();
+  const isDark = document.body.classList.contains('dark') || document.documentElement.getAttribute('data-theme') === 'dark';
+  const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+  const textColor = isDark ? '#666' : '#999';
+
+  canvas._chartInst = new Chart(canvas, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Equity', data: equityData, borderColor: '#00d68f', backgroundColor: 'rgba(0,214,143,0.08)', borderWidth: 2, pointRadius: 0, fill: true, tension: 0.3 },
+        { label: 'DD Floor', data: floorData, borderColor: '#f0435a', backgroundColor: 'rgba(240,67,90,0.05)', borderWidth: 1.5, pointRadius: 0, fill: false, borderDash: [4,3], tension: 0.3 },
+        { label: 'Target', data: targetLine, borderColor: '#4da8ff', backgroundColor: 'transparent', borderWidth: 1, pointRadius: 0, fill: false, borderDash: [6,4], tension: 0 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { display: true, labels: { color: textColor, font: { family: 'Outfit', size: 11 }, boxWidth: 12 } }, tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': $' + ctx.parsed.y.toFixed(2) } } },
+      scales: {
+        x: { ticks: { color: textColor, font: { family: 'DM Mono', size: 10 }, maxTicksLimit: 8 }, grid: { color: gridColor } },
+        y: { ticks: { color: textColor, font: { family: 'DM Mono', size: 10 }, callback: v => '$'+v.toLocaleString() }, grid: { color: gridColor } }
+      }
+    }
+  });
 }
 
 function renderAccStat(val, lbl, color) {
