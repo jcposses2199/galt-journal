@@ -3045,6 +3045,7 @@ async function saveTradeDB(t) {
       net: t.net, comm: t.comm, rating: t.rating, notas: t.notas,
       trend: t.trend, candle_color: t.candleColor,
       candle_form: t.candleForm, strategy: t.strategy, session: t.session,
+      account_id: t.account_id || null,
       user_id: currentUser?.id
     };
     await sbFetch('trades', {
@@ -3607,6 +3608,8 @@ function editTrade(id) {
   document.getElementById('f-candle-formation').value = t.candleForm || '';
   document.getElementById('f-strategy').value       = t.strategy || '';
   document.getElementById('f-session').value        = t.session || '';
+  const accSel = document.getElementById('f-account');
+  if (accSel) accSel.value = t.account_id || '';
 
   // Set side
   setTipo(t.tipo || 'LONG');
