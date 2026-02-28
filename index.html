@@ -1849,7 +1849,7 @@
     <input type="hidden" id="f-edit-id" value="">
 
     <!-- Section: PA Account -->
-    <div id="paAccountSection" style="display:none">
+    <div id="paAccountSection">
       <div class="form-section-label">Prop Account</div>
       <div class="form-grid">
         <div class="form-group full">
@@ -2070,9 +2070,7 @@ function updateAccountDropdown() {
       sel.appendChild(opt);
     });
   });
-  // Show section if accounts exist
-  const section = document.getElementById('paAccountSection');
-  if (section) section.style.display = propAccounts.length ? 'block' : 'none';
+
 }
 
 function renderAccountTabBar() {
@@ -3609,7 +3607,11 @@ function editTrade(id) {
   document.getElementById('f-strategy').value       = t.strategy || '';
   document.getElementById('f-session').value        = t.session || '';
   const accSel = document.getElementById('f-account');
-  if (accSel) accSel.value = t.account_id || '';
+  if (accSel) {
+    // If dropdown only has the default option, reload accounts
+    if (accSel.options.length <= 1 && propAccounts.length > 0) updateAccountDropdown();
+    accSel.value = t.account_id || '';
+  }
 
   // Set side
   setTipo(t.tipo || 'LONG');
