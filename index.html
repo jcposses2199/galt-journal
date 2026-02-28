@@ -1082,35 +1082,280 @@
   .acc-stat-val { font-family: DM Mono, monospace; font-size: 18px; font-weight: 700; margin-bottom: 2px; }
   .acc-stat-lbl { font-family: Outfit, sans-serif; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .acc-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-family: Outfit, sans-serif; font-size: 12px; font-weight: 700; }
+
+  /* ── LANDING PAGE ── */
+  .lp-stat-cell {
+    background: rgba(9,11,14,0.8);
+    padding: 32px 24px;
+    text-align: center;
+    transition: background 0.2s;
+  }
+  .lp-stat-cell:hover { background: rgba(0,214,143,0.04); }
+  .lp-stat-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 36px; font-weight: 700;
+    color: #00d68f; letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+  .lp-stat-lbl {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px; font-weight: 500;
+    color: #525e72; text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .lp-feature-card {
+    background: rgba(15,18,22,0.8);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px; padding: 28px 24px;
+    text-align: left;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    opacity: 0; transform: translateY(20px);
+    animation: lpFadeUp 0.5s ease forwards;
+    animation-delay: var(--delay, 0s);
+  }
+  .lp-feature-card:hover {
+    border-color: rgba(0,214,143,0.25);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+  }
+  .lp-feature-icon {
+    width: 44px; height: 44px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 16px;
+  }
+  .lp-feature-title {
+    font-family: 'Outfit', sans-serif;
+    font-size: 16px; font-weight: 700;
+    color: #e4e8ef; margin-bottom: 8px;
+  }
+  .lp-feature-desc {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 400;
+    color: #525e72; line-height: 1.65;
+  }
+
+  .lp-step {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 0 0 32px 0; text-align: left; position: relative; z-index: 1;
+    opacity: 0; transform: translateX(-10px);
+    animation: lpFadeRight 0.4s ease forwards;
+    animation-delay: var(--delay, 0s);
+  }
+  .lp-step:last-child { padding-bottom: 0; }
+  .lp-step-num {
+    width: 46px; height: 46px; border-radius: 50%;
+    background: #00d68f; color: #000;
+    font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; position: relative; z-index: 1;
+    box-shadow: 0 0 0 4px #090b0e;
+  }
+  .lp-step-body { padding-top: 10px; }
+  .lp-step-title {
+    font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700;
+    color: #e4e8ef; margin-bottom: 4px;
+  }
+  .lp-step-desc {
+    font-family: 'Outfit', sans-serif; font-size: 13px;
+    color: #525e72; line-height: 1.6;
+  }
+
+  @keyframes lpFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes lpFadeRight {
+    from { opacity: 0; transform: translateX(-10px); }
+    to   { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes lpCountUp {
+    from { opacity: 0; } to { opacity: 1; }
+  }
+  @keyframes heroFadeIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .lp-hero-animate {
+    opacity: 0;
+    animation: heroFadeIn 0.7s ease forwards;
+  }
+
 </style>
 </head>
 <body>
 <!-- LOGIN SCREEN -->
-<div id="loginScreen" style="display:none;position:fixed;inset:0;background:var(--bg);z-index:999;align-items:center;justify-content:center;flex-direction:column">
-  <div style="width:100%;max-width:400px;padding:40px;background:var(--card);border:1px solid var(--border2);border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
-    <div style="text-align:center;margin-bottom:32px">
-      <div style="font-family:'Outfit',sans-serif;font-size:28px;font-weight:800;letter-spacing:-1px;margin-bottom:6px">GAL<span style="color:var(--accent)">T</span></div>
-      <div style="font-family:'Outfit',sans-serif;font-size:13px;color:var(--muted)">Trade Journal</div>
-    </div>
-    <div id="loginError" style="display:none;background:rgba(240,67,90,0.12);border:1px solid rgba(240,67,90,0.3);border-radius:10px;padding:10px 14px;font-family:Outfit,sans-serif;font-size:13px;color:var(--red);margin-bottom:16px"></div>
-    <div id="loginSuccess" style="display:none;background:rgba(0,214,143,0.12);border:1px solid rgba(0,214,143,0.3);border-radius:10px;padding:10px 14px;font-family:Outfit,sans-serif;font-size:13px;color:var(--accent);margin-bottom:16px"></div>
-    <div style="display:flex;background:var(--bg);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px">
-      <button id="tabLoginBtn" onclick="showLoginTab('login')" style="flex:1;padding:8px;border:none;border-radius:8px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:var(--card);color:var(--text)">Sign In</button>
-      <button id="tabSignupBtn" onclick="showLoginTab('signup')" style="flex:1;padding:8px;border:none;border-radius:8px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:var(--muted)">Sign Up</button>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-      <div>
-        <label style="font-family:Outfit,sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Email</label>
-        <input id="authEmail" type="email" placeholder="you@email.com" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'" onkeydown="if(event.key==='Enter')handleAuth()">
+<div id="loginScreen" style="display:none;position:fixed;inset:0;z-index:999;overflow-y:auto;overflow-x:hidden;background:#090b0e;width:100vw">
+
+  <!-- Background grid -->
+  <div style="position:fixed;inset:0;pointer-events:none;background-image:linear-gradient(rgba(0,214,143,0.025) 1px,transparent 1px),linear-gradient(90deg,rgba(0,214,143,0.025) 1px,transparent 1px);background-size:44px 44px"></div>
+
+  <!-- Glow blobs -->
+  <div style="position:fixed;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,214,143,0.07) 0%,transparent 70%);top:-100px;left:-100px;pointer-events:none"></div>
+  <div style="position:fixed;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(0,100,255,0.05) 0%,transparent 70%);bottom:-80px;right:-80px;pointer-events:none"></div>
+
+  <div style="position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;width:100%;box-sizing:border-box">
+
+    <!-- NAV -->
+    <nav style="display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,0.05);width:100%;box-sizing:border-box">
+      <div style="font-family:Outfit,sans-serif;font-size:32px;font-weight:800;letter-spacing:-1px;color:#e4e8ef;line-height:1">GAL<span style="color:#00d68f">T</span></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <button onclick="showLoginTab('login');scrollToAuth()" style="background:none;border:none;color:#9aa3b2;font-family:Outfit,sans-serif;font-size:14px;font-weight:500;cursor:pointer;padding:8px 16px;border-radius:8px;transition:color 0.15s" onmouseover="this.style.color='#e4e8ef'" onmouseout="this.style.color='#9aa3b2'">Sign In</button>
+        <button onclick="showLoginTab('signup');scrollToAuth()" style="background:#00d68f;color:#000;border:none;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer;padding:9px 22px;border-radius:9px;transition:all 0.15s" onmouseover="this.style.background='#00ffb3'" onmouseout="this.style.background='#00d68f'">Get Started</button>
       </div>
-      <div>
-        <label style="font-family:Outfit,sans-serif;font-size:12px;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:6px">Password</label>
-        <input id="authPassword" type="password" placeholder="••••••••" style="width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:10px;padding:11px 14px;color:var(--text);font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border2)'" onkeydown="if(event.key==='Enter')handleAuth()">
+    </nav>
+
+    <!-- HERO -->
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 24px 60px;text-align:center;width:100%;box-sizing:border-box">
+
+      <!-- Badge -->
+      <div style="display:inline-flex;align-items:center;gap:8px;background:rgba(0,214,143,0.08);border:1px solid rgba(0,214,143,0.2);border-radius:20px;padding:6px 16px;margin-bottom:28px">
+        <div style="width:6px;height:6px;border-radius:50%;background:#00d68f"></div>
+        <span style="font-family:Outfit,sans-serif;font-size:12px;font-weight:600;color:#00d68f;letter-spacing:0.5px">PROFESSIONAL TRADE JOURNAL</span>
       </div>
-      <button id="authBtn" onclick="handleAuth()" style="background:var(--accent);color:#000;border:none;padding:12px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px">Sign In</button>
-    </div>
-    <div id="forgotWrap" style="text-align:center;margin-top:16px">
-      <button onclick="handleForgotPassword()" style="background:none;border:none;color:var(--muted);font-family:Outfit,sans-serif;font-size:12px;cursor:pointer;text-decoration:underline">Forgot password?</button>
+
+      <!-- Headline -->
+      <h1 style="font-family:Outfit,sans-serif;font-size:clamp(36px,6vw,72px);font-weight:800;letter-spacing:-2px;line-height:1.05;color:#e4e8ef;margin:0 0 20px">
+        Trade smarter.<br><span style="color:#00d68f">Track everything.</span>
+      </h1>
+
+      <!-- Subheadline -->
+      <p style="font-family:Outfit,sans-serif;font-size:clamp(15px,2vw,18px);color:#6b7588;max-width:520px;line-height:1.65;margin:0 0 40px;font-weight:400">
+        The professional journal built for active traders. P&L tracking, prop account management, setup analytics and group leaderboards — all in one place.
+      </p>
+
+      <!-- CTA buttons -->
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:64px">
+        <button onclick="showLoginTab('signup');scrollToAuth()" style="background:#00d68f;color:#000;border:none;font-family:Outfit,sans-serif;font-size:15px;font-weight:700;cursor:pointer;padding:14px 32px;border-radius:11px;transition:all 0.15s;box-shadow:0 8px 32px rgba(0,214,143,0.25)" onmouseover="this.style.background='#00ffb3';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#00d68f';this.style.transform='translateY(0)'">Start for free →</button>
+        <button onclick="showLoginTab('login');scrollToAuth()" style="background:rgba(255,255,255,0.05);color:#e4e8ef;border:1px solid rgba(255,255,255,0.1);font-family:Outfit,sans-serif;font-size:15px;font-weight:600;cursor:pointer;padding:14px 32px;border-radius:11px;transition:all 0.15s" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">Sign In</button>
+      </div>
+
+      <!-- Feature pills -->
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:80px">
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 16px;font-family:Outfit,sans-serif;font-size:13px;color:#9aa3b2">📊 P&L Analytics</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 16px;font-family:Outfit,sans-serif;font-size:13px;color:#9aa3b2">🏦 Prop Account Tracker</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 16px;font-family:Outfit,sans-serif;font-size:13px;color:#9aa3b2">🔥 Heatmap Calendar</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 16px;font-family:Outfit,sans-serif;font-size:13px;color:#9aa3b2">👥 Group Leaderboard</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 16px;font-family:Outfit,sans-serif;font-size:13px;color:#9aa3b2">📈 Setup Report</div>
+        <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:8px 16px;font-family:Outfit,sans-serif;font-size:13px;color:#9aa3b2">⚡ Real-time Sync</div>
+      </div>
+
+      <!-- STATS SECTION -->
+      <div style="width:100%;max-width:900px;margin:0 auto 80px;padding:0 24px;box-sizing:border-box">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1px;background:rgba(255,255,255,0.06);border-radius:16px;overflow:hidden;border:1px solid rgba(255,255,255,0.06)">
+          <div class="lp-stat-cell">
+            <div class="lp-stat-num" data-target="12847">0</div>
+            <div class="lp-stat-lbl">Trades Logged</div>
+          </div>
+          <div class="lp-stat-cell">
+            <div class="lp-stat-num" data-target="384" data-prefix="$" data-suffix="K">$0K</div>
+            <div class="lp-stat-lbl">P&L Tracked</div>
+          </div>
+          <div class="lp-stat-cell">
+            <div class="lp-stat-num" data-target="247">0</div>
+            <div class="lp-stat-lbl">Active Traders</div>
+          </div>
+          <div class="lp-stat-cell">
+            <div class="lp-stat-num" data-target="98" data-suffix="%">0%</div>
+            <div class="lp-stat-lbl">Uptime</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FEATURES SECTION -->
+      <div style="width:100%;max-width:900px;margin:0 auto 80px;padding:0 24px;box-sizing:border-box">
+        <div style="text-align:center;margin-bottom:48px">
+          <div style="font-family:Outfit,sans-serif;font-size:clamp(26px,4vw,40px);font-weight:800;letter-spacing:-1px;color:#e4e8ef;margin-bottom:12px">Everything you need to<br><span style="color:#00d68f">level up your trading</span></div>
+          <div style="font-family:Outfit,sans-serif;font-size:15px;color:#525e72;max-width:400px;margin:0 auto">Built by traders, for traders. Every feature designed to give you an edge.</div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px">
+          <div class="lp-feature-card" style="--delay:0s">
+            <div class="lp-feature-icon" style="background:rgba(0,214,143,0.1);color:#00d68f">📊</div>
+            <div class="lp-feature-title">Advanced Analytics</div>
+            <div class="lp-feature-desc">Win rate, profit factor, expectancy, drawdown charts, P&L distribution and streak tracking — all updated in real time.</div>
+          </div>
+          <div class="lp-feature-card" style="--delay:0.08s">
+            <div class="lp-feature-icon" style="background:rgba(77,168,255,0.1);color:#4da8ff">🏦</div>
+            <div class="lp-feature-title">Prop Account Tracker</div>
+            <div class="lp-feature-desc">Track trailing drawdown, daily loss limits and profit targets across multiple funded accounts simultaneously.</div>
+          </div>
+          <div class="lp-feature-card" style="--delay:0.16s">
+            <div class="lp-feature-icon" style="background:rgba(245,200,66,0.1);color:#f5c842">🔥</div>
+            <div class="lp-feature-title">Heatmap Calendar</div>
+            <div class="lp-feature-desc">Visualize every trading day at a glance. Green days, red days, no-trade days — with daily recaps and notes.</div>
+          </div>
+          <div class="lp-feature-card" style="--delay:0.24s">
+            <div class="lp-feature-icon" style="background:rgba(240,67,90,0.1);color:#f0435a">👥</div>
+            <div class="lp-feature-title">Group Leaderboard</div>
+            <div class="lp-feature-desc">Compete with your trading group. Shared feed, setups, rules and live leaderboard to keep everyone accountable.</div>
+          </div>
+          <div class="lp-feature-card" style="--delay:0.32s">
+            <div class="lp-feature-icon" style="background:rgba(0,214,143,0.1);color:#00d68f">🎯</div>
+            <div class="lp-feature-title">Setup Report</div>
+            <div class="lp-feature-desc">Discover which setups, trends and candle formations actually make you money. Filter by strategy, session and side.</div>
+          </div>
+          <div class="lp-feature-card" style="--delay:0.40s">
+            <div class="lp-feature-icon" style="background:rgba(150,100,255,0.1);color:#a78bfa">⚡</div>
+            <div class="lp-feature-title">Real-time Cloud Sync</div>
+            <div class="lp-feature-desc">Every trade syncs instantly to the cloud. Access your journal from any device, anytime. Never lose a trade.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOW IT WORKS -->
+      <div style="width:100%;max-width:700px;margin:0 auto 80px;padding:0 24px;box-sizing:border-box;text-align:center">
+        <div style="font-family:Outfit,sans-serif;font-size:clamp(22px,3vw,34px);font-weight:800;letter-spacing:-0.8px;color:#e4e8ef;margin-bottom:40px">Get started in <span style="color:#00d68f">60 seconds</span></div>
+        <div style="display:flex;flex-direction:column;gap:0;position:relative">
+          <div style="position:absolute;left:23px;top:0;bottom:0;width:1px;background:linear-gradient(180deg,#00d68f,rgba(0,214,143,0.1));z-index:0"></div>
+          <div class="lp-step" style="--delay:0s"><div class="lp-step-num">1</div><div class="lp-step-body"><div class="lp-step-title">Create your account</div><div class="lp-step-desc">Sign up with your email. Free, no credit card required.</div></div></div>
+          <div class="lp-step" style="--delay:0.1s"><div class="lp-step-num">2</div><div class="lp-step-body"><div class="lp-step-title">Log your first trade</div><div class="lp-step-desc">Enter symbol, P&L, rating and notes. Takes 10 seconds.</div></div></div>
+          <div class="lp-step" style="--delay:0.2s"><div class="lp-step-num">3</div><div class="lp-step-body"><div class="lp-step-title">See your patterns</div><div class="lp-step-desc">Analytics update instantly. Find out what's working and what's not.</div></div></div>
+          <div class="lp-step" style="--delay:0.3s"><div class="lp-step-num">4</div><div class="lp-step-body"><div class="lp-step-title">Trade better</div><div class="lp-step-desc">Use the data to improve your edge and grow your account.</div></div></div>
+        </div>
+      </div>
+
+      <!-- AUTH CARD (moved here from above) -->
+      <!-- AUTH CARD -->
+      <div id="authCard" style="width:100%;max-width:420px;background:rgba(15,18,22,0.95);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:36px;box-shadow:0 40px 80px rgba(0,0,0,0.6);backdrop-filter:blur(20px)">
+
+        <div style="text-align:center;margin-bottom:28px">
+          <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:700;color:#e4e8ef;margin-bottom:6px" id="authCardTitle">Welcome back</div>
+          <div style="font-family:Outfit,sans-serif;font-size:13px;color:#525e72" id="authCardSub">Sign in to your GALT account</div>
+        </div>
+
+        <div id="loginError" style="display:none;background:rgba(240,67,90,0.12);border:1px solid rgba(240,67,90,0.3);border-radius:10px;padding:10px 14px;font-family:Outfit,sans-serif;font-size:13px;color:#f0435a;margin-bottom:16px"></div>
+        <div id="loginSuccess" style="display:none;background:rgba(0,214,143,0.12);border:1px solid rgba(0,214,143,0.3);border-radius:10px;padding:10px 14px;font-family:Outfit,sans-serif;font-size:13px;color:#00d68f;margin-bottom:16px"></div>
+
+        <!-- Tab toggle -->
+        <div style="display:flex;background:rgba(0,0,0,0.3);border-radius:10px;padding:4px;margin-bottom:24px;gap:4px">
+          <button id="tabLoginBtn" onclick="showLoginTab('login')" style="flex:1;padding:9px;border:none;border-radius:7px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:rgba(255,255,255,0.08);color:#e4e8ef;transition:all 0.15s">Sign In</button>
+          <button id="tabSignupBtn" onclick="showLoginTab('signup')" style="flex:1;padding:9px;border:none;border-radius:7px;font-family:Outfit,sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:#525e72;transition:all 0.15s">Sign Up</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:#6b7588;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:7px">Email</label>
+            <input id="authEmail" type="email" placeholder="you@email.com" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;color:#e4e8ef;font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box;transition:border-color 0.15s" onfocus="this.style.borderColor='#00d68f';this.style.boxShadow='0 0 0 3px rgba(0,214,143,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.boxShadow='none'" onkeydown="if(event.key==='Enter')handleAuth()">
+          </div>
+          <div>
+            <label style="font-family:Outfit,sans-serif;font-size:11px;font-weight:700;color:#6b7588;text-transform:uppercase;letter-spacing:0.8px;display:block;margin-bottom:7px">Password</label>
+            <input id="authPassword" type="password" placeholder="••••••••" style="width:100%;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:12px 14px;color:#e4e8ef;font-family:Outfit,sans-serif;font-size:14px;outline:none;box-sizing:border-box;transition:border-color 0.15s" onfocus="this.style.borderColor='#00d68f';this.style.boxShadow='0 0 0 3px rgba(0,214,143,0.1)'" onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.boxShadow='none'" onkeydown="if(event.key==='Enter')handleAuth()">
+          </div>
+          <button id="authBtn" onclick="handleAuth()" style="background:#00d68f;color:#000;border:none;padding:13px;border-radius:10px;font-family:Outfit,sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;transition:all 0.15s;box-shadow:0 4px 16px rgba(0,214,143,0.2)" onmouseover="this.style.background='#00ffb3'" onmouseout="this.style.background='#00d68f'">Sign In</button>
+        </div>
+
+        <div id="forgotWrap" style="text-align:center;margin-top:16px">
+          <button onclick="handleForgotPassword()" style="background:none;border:none;color:#525e72;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer;text-decoration:underline;transition:color 0.15s" onmouseover="this.style.color='#9aa3b2'" onmouseout="this.style.color='#525e72'">Forgot password?</button>
+        </div>
+      </div>
+
+
+
+      <!-- Footer -->
+      <div style="margin-top:48px;padding-bottom:40px;font-family:Outfit,sans-serif;font-size:12px;color:#2a3040;text-align:center">
+        © 2026 GALT Trade Journal · Built for serious traders
+      </div>
+
     </div>
   </div>
 </div>
@@ -2854,9 +3099,52 @@ async function retryFailedSaves() {
 let currentUser = null;
 let authMode = 'login';
 
+
+
+function initLandingPage() {
+  // Animate hero elements sequentially
+  const heroEl = document.querySelector('#loginScreen h1');
+  // Counter animation
+  const counters = document.querySelectorAll('.lp-stat-num');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const el = entry.target;
+      const target = parseInt(el.dataset.target);
+      const prefix = el.dataset.prefix || '';
+      const suffix = el.dataset.suffix || '';
+      if (!target) return;
+      const duration = 1800;
+      const start = performance.now();
+      function update(now) {
+        const progress = Math.min((now - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const val = Math.round(eased * target);
+        el.textContent = prefix + val.toLocaleString() + suffix;
+        if (progress < 1) requestAnimationFrame(update);
+      }
+      requestAnimationFrame(update);
+      observer.unobserve(el);
+    });
+  }, { threshold: 0.3 });
+  counters.forEach(el => observer.observe(el));
+}
+
+// Run after login screen shows
+const _origShowLogin = window.showLoginScreen;
+
+function scrollToAuth() {
+  const card = document.getElementById('authCard');
+  if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
 function showLoginTab(mode) {
   authMode = mode;
   const isLogin = mode === 'login';
+  const titleEl = document.getElementById('authCardTitle');
+  const subEl   = document.getElementById('authCardSub');
+  if (titleEl) titleEl.textContent = isLogin ? 'Welcome back' : 'Create your account';
+  if (subEl)   subEl.textContent   = isLogin ? 'Sign in to your GALT account' : 'Start tracking your trades today';
   document.getElementById('tabLoginBtn').style.background = isLogin ? 'var(--card)' : 'transparent';
   document.getElementById('tabLoginBtn').style.color = isLogin ? 'var(--text)' : 'var(--muted)';
   document.getElementById('tabSignupBtn').style.background = !isLogin ? 'var(--card)' : 'transparent';
@@ -2956,6 +3244,7 @@ async function signOut() {
   currentUser = null;
   document.getElementById('app').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
+  setTimeout(initLandingPage, 100);
   document.getElementById('avatarInitial').textContent = '?';
   document.getElementById('avatarMenuEmail').textContent = '';
 }
@@ -3228,6 +3517,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Show login screen
   document.getElementById('loginScreen').style.display = 'flex';
+  setTimeout(initLandingPage, 100);
 });
 
 function saveTrades() {
