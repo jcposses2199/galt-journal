@@ -3046,11 +3046,21 @@ async function saveTradeDB(t) {
       account_id: t.account_id || null,
       user_id: currentUser?.id
     };
-    await sbFetch('trades', {
-      method: 'POST',
-      headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
-      body: JSON.stringify(row)
-    });
+    // Check if trade exists in DB (has a numeric id = local, uuid = already in DB)
+    const isExisting = typeof t.id === 'string' && t.id.includes('-');
+    if (isExisting) {
+      await sbFetch('trades?id=eq.' + t.id, {
+        method: 'PATCH',
+        headers: { 'Prefer': 'return=representation' },
+        body: JSON.stringify(row)
+      });
+    } else {
+      await sbFetch('trades', {
+        method: 'POST',
+        headers: { 'Prefer': 'resolution=merge-duplicates,return=representation' },
+        body: JSON.stringify(row)
+      });
+    }
     setSyncState('saved');
   } catch(e) { addToRetryQueue('trade', t); setSyncState('error'); }
 }
