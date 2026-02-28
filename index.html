@@ -2974,7 +2974,8 @@ async function bootApp() {
     loadTradesFromDB(),
     loadNoTradeDaysFromDB(),
     loadRecapsFromDB(),
-    loadSettingDB('tradelog_balance', '')
+    loadSettingDB('tradelog_balance', ''),
+    loadPropAccounts()
   ]);
   trades = dbTrades;
   noTradeDays = dbNoTrade;
