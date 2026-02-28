@@ -1073,14 +1073,46 @@
   .sync-saving { animation: pulse 1s infinite; }
 
   .acc-sub-tab {
-    background: transparent; border: none; color: var(--muted);
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text2);
     font-family: Outfit, sans-serif; font-size: 13px; font-weight: 600;
-    padding: 8px 16px; border-radius: 9px; cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    padding: 10px 20px; border-radius: 10px; cursor: pointer;
+    transition: all 0.15s; white-space: nowrap;
+    display: flex; align-items: center; gap: 7px;
   }
-  .acc-sub-tab.active { background: var(--card); color: var(--text); }
+  .acc-sub-tab:hover:not(.active) {
+    border-color: var(--accent);
+    color: var(--text);
+    background: rgba(0,214,143,0.04);
+  }
+  .acc-sub-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #000;
+    box-shadow: 0 4px 16px rgba(0,214,143,0.25);
+  }
   .acc-progress-bar { height: 8px; border-radius: 4px; background: var(--border2); overflow: hidden; margin-top: 6px; }
   .acc-progress-fill { height: 100%; border-radius: 4px; transition: width 0.5s; }
-  .acc-stat { background: var(--bg); border-radius: 12px; padding: 14px 16px; }
+  .acc-stat {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px 20px;
+    transition: border-color 0.15s, transform 0.15s;
+  }
+  .acc-stat:hover { border-color: var(--border2); transform: translateY(-1px); }
+  .acc-stat-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .acc-stat-val {
+    font-family: 'Outfit', sans-serif;
+    font-size: 22px; font-weight: 700;
+    letter-spacing: -0.8px; line-height: 1;
+  }
   .acc-stat-val { font-family: DM Mono, monospace; font-size: 18px; font-weight: 700; margin-bottom: 2px; }
   .acc-stat-lbl { font-family: Outfit, sans-serif; font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .acc-status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-family: Outfit, sans-serif; font-size: 12px; font-weight: 700; }
@@ -1628,6 +1660,54 @@
   #setupReportTable tbody tr { border-bottom: 1px solid var(--border); }
   #setupReportTable tbody tr:hover { background: rgba(0,214,143,0.02) !important; }
 
+
+  /* ── PA Detail redesign ── */
+  .pa-check-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    transition: border-color 0.15s;
+  }
+  .pa-check-item:hover { border-color: var(--border2); }
+  .pa-check-icon {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    flex-shrink: 0;
+    font-family: 'Outfit', sans-serif;
+  }
+  .pa-check-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px; font-weight: 600;
+    color: var(--text);
+  }
+  .pa-check-sub {
+    font-family: 'Outfit', sans-serif;
+    font-size: 11px; color: var(--muted);
+    margin-top: 2px;
+  }
+
+  .pa-rule-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .pa-rule-label {
+    font-family: 'Outfit', sans-serif;
+    font-size: 13px; color: var(--muted); font-weight: 400;
+  }
+  .pa-rule-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 14px; font-weight: 700;
+  }
+
 </style>
 </head>
 <body>
@@ -2167,15 +2247,55 @@
         </select>
         <select id="sf-form" onchange="updateSetupReport()">
           <option value="">All Formations</option>
-          <option value="Doji">Doji</option>
-          <option value="Hammer">Hammer</option>
-          <option value="Shooting Star">Shooting Star</option>
-          <option value="Bullish Engulfing">Bullish Engulfing</option>
-          <option value="Bearish Engulfing">Bearish Engulfing</option>
-          <option value="Morning Star">Morning Star</option>
-          <option value="Evening Star">Evening Star</option>
-          <option value="Pin Bar">Pin Bar</option>
-          <option value="Inside Bar">Inside Bar</option>
+          <optgroup label="Doji">
+            <option value="Doji">Doji</option>
+            <option value="Long-legged Doji">Long-legged Doji</option>
+            <option value="Gravestone Doji">Gravestone Doji</option>
+            <option value="Dragonfly Doji">Dragonfly Doji</option>
+          </optgroup>
+          <optgroup label="Hammer">
+            <option value="Hammer">Hammer</option>
+            <option value="Inverted Hammer">Inverted Hammer</option>
+            <option value="Hanging Man">Hanging Man</option>
+            <option value="Shooting Star">Shooting Star</option>
+          </optgroup>
+          <optgroup label="Engulfing">
+            <option value="Bullish Engulfing">Bullish Engulfing</option>
+            <option value="Bearish Engulfing">Bearish Engulfing</option>
+          </optgroup>
+          <optgroup label="Star">
+            <option value="Morning Star">Morning Star</option>
+            <option value="Evening Star">Evening Star</option>
+            <option value="Morning Doji Star">Morning Doji Star</option>
+            <option value="Evening Doji Star">Evening Doji Star</option>
+            <option value="Abandoned Baby">Abandoned Baby</option>
+          </optgroup>
+          <optgroup label="Harami">
+            <option value="Bullish Harami">Bullish Harami</option>
+            <option value="Bearish Harami">Bearish Harami</option>
+            <option value="Harami Cross">Harami Cross</option>
+          </optgroup>
+          <optgroup label="Single Candle">
+            <option value="Pin Bar">Pin Bar</option>
+            <option value="Inside Bar">Inside Bar</option>
+            <option value="Outside Bar">Outside Bar</option>
+            <option value="Marubozu Bullish">Marubozu Bullish</option>
+            <option value="Marubozu Bearish">Marubozu Bearish</option>
+            <option value="Spinning Top">Spinning Top</option>
+            <option value="High Wave">High Wave</option>
+          </optgroup>
+          <optgroup label="Multi-Candle">
+            <option value="Three White Soldiers">Three White Soldiers</option>
+            <option value="Three Black Crows">Three Black Crows</option>
+            <option value="Three Inside Up">Three Inside Up</option>
+            <option value="Three Inside Down">Three Inside Down</option>
+            <option value="Three Outside Up">Three Outside Up</option>
+            <option value="Three Outside Down">Three Outside Down</option>
+            <option value="Tweezer Top">Tweezer Top</option>
+            <option value="Tweezer Bottom">Tweezer Bottom</option>
+            <option value="Piercing Line">Piercing Line</option>
+            <option value="Dark Cloud Cover">Dark Cloud Cover</option>
+          </optgroup>
           <option value="Other">Other</option>
         </select>
         <select id="sf-ema" onchange="updateSetupReport()">
@@ -2401,7 +2521,7 @@
     </div>
 
     <!-- Account selector tabs -->
-    <div id="accountTabBar" style="display:flex;gap:4px;margin-bottom:20px;background:var(--bg);padding:4px;border-radius:12px;overflow-x:auto;flex-wrap:wrap"></div>
+    <div id="accountTabBar" style="display:flex;gap:8px;margin-bottom:24px;overflow-x:auto;flex-wrap:wrap;padding-bottom:4px"></div>
 
     <!-- Account content -->
     <div id="accountContent"></div>
@@ -2684,15 +2804,55 @@
         <label>Candle Formation</label>
         <select id="f-candle-formation">
           <option value="">— Select —</option>
-          <option value="Doji">Doji</option>
-          <option value="Hammer">Hammer</option>
-          <option value="Shooting Star">Shooting Star</option>
-          <option value="Bullish Engulfing">Bullish Engulfing</option>
-          <option value="Bearish Engulfing">Bearish Engulfing</option>
-          <option value="Morning Star">Morning Star</option>
-          <option value="Evening Star">Evening Star</option>
-          <option value="Pin Bar">Pin Bar</option>
-          <option value="Inside Bar">Inside Bar</option>
+          <optgroup label="Doji Patterns">
+            <option value="Doji">Doji</option>
+            <option value="Long-legged Doji">Long-legged Doji</option>
+            <option value="Gravestone Doji">Gravestone Doji</option>
+            <option value="Dragonfly Doji">Dragonfly Doji</option>
+          </optgroup>
+          <optgroup label="Hammer Patterns">
+            <option value="Hammer">Hammer</option>
+            <option value="Inverted Hammer">Inverted Hammer</option>
+            <option value="Hanging Man">Hanging Man</option>
+            <option value="Shooting Star">Shooting Star</option>
+          </optgroup>
+          <optgroup label="Engulfing Patterns">
+            <option value="Bullish Engulfing">Bullish Engulfing</option>
+            <option value="Bearish Engulfing">Bearish Engulfing</option>
+          </optgroup>
+          <optgroup label="Star Patterns">
+            <option value="Morning Star">Morning Star</option>
+            <option value="Evening Star">Evening Star</option>
+            <option value="Morning Doji Star">Morning Doji Star</option>
+            <option value="Evening Doji Star">Evening Doji Star</option>
+            <option value="Abandoned Baby">Abandoned Baby</option>
+          </optgroup>
+          <optgroup label="Harami Patterns">
+            <option value="Bullish Harami">Bullish Harami</option>
+            <option value="Bearish Harami">Bearish Harami</option>
+            <option value="Harami Cross">Harami Cross</option>
+          </optgroup>
+          <optgroup label="Other Single Candle">
+            <option value="Pin Bar">Pin Bar</option>
+            <option value="Inside Bar">Inside Bar</option>
+            <option value="Outside Bar">Outside Bar</option>
+            <option value="Marubozu Bullish">Marubozu Bullish</option>
+            <option value="Marubozu Bearish">Marubozu Bearish</option>
+            <option value="Spinning Top">Spinning Top</option>
+            <option value="High Wave">High Wave</option>
+          </optgroup>
+          <optgroup label="Multi-Candle Patterns">
+            <option value="Three White Soldiers">Three White Soldiers</option>
+            <option value="Three Black Crows">Three Black Crows</option>
+            <option value="Three Inside Up">Three Inside Up</option>
+            <option value="Three Inside Down">Three Inside Down</option>
+            <option value="Three Outside Up">Three Outside Up</option>
+            <option value="Three Outside Down">Three Outside Down</option>
+            <option value="Tweezer Top">Tweezer Top</option>
+            <option value="Tweezer Bottom">Tweezer Bottom</option>
+            <option value="Piercing Line">Piercing Line</option>
+            <option value="Dark Cloud Cover">Dark Cloud Cover</option>
+          </optgroup>
           <option value="Other">Other</option>
         </select>
       </div>
@@ -2773,15 +2933,23 @@ function renderAccountTabBar() {
   const bar = document.getElementById('accountTabBar');
   if (!bar) return;
   bar.innerHTML = '';
-  const addBtn = (id, label) => {
+  const addBtn = (id, label, dotCol) => {
     const b = document.createElement('button');
     b.className = 'acc-sub-tab' + (selectedAccountId === id ? ' active' : '');
-    b.textContent = label;
+    if (dotCol) {
+      b.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:' + dotCol + ';flex-shrink:0;display:inline-block"></span>' + label;
+    } else {
+      b.textContent = label;
+    }
     b.onclick = () => selectAccount(id, b);
     bar.appendChild(b);
   };
-  addBtn('consolidated', '📊 Consolidated');
-  propAccounts.forEach(a => addBtn(a.id, a.nickname));
+  addBtn('consolidated', '⬡  All Accounts');
+  propAccounts.forEach(a => {
+    const s = calcTrailingDrawdown(a);
+    const dotCol = s.status==='ready'?'#4da8ff':s.status==='at_risk'?'#f0435a':s.status==='caution'?'#f5c842':'#00d68f';
+    addBtn(a.id, a.nickname, dotCol);
+  });
 }
 
 function selectAccount(id, btn) {
@@ -2814,7 +2982,7 @@ function calcTrailingDrawdown(account) {
   const pnl          = equity - (account.initial_balance || account.size);
   const currentDD    = equity - peak; // <= 0
   const remainingDD  = equity - floor; // how much left before breach
-  const targetProg   = Math.min(pnl / account.profit_target, 1);
+  const targetProg   = Math.min(Math.max(pnl / account.profit_target, 0), 1);
   const ddProg       = remainingDD / account.trailing_drawdown;
   const tradingDays  = [...new Set(accTrades.map(t => new Date(t.datetime).toDateString()))].length;
   const dailyLosses  = {};
@@ -2909,68 +3077,203 @@ function renderConsolidated(el) {
 function renderSingleAccount(el, acc) {
   const s = calcTrailingDrawdown(acc);
   const statusColors = { on_track: 'var(--accent)', caution: 'var(--yellow)', at_risk: 'var(--red)', ready: '#4da8ff' };
-  const statusLabels = { on_track: '✓ On Track', caution: '⚠ Caution', at_risk: '✗ At Risk', ready: '🏆 Ready for Payout' };
+  const statusLabels = { on_track: '✓ On Track', caution: '⚠ Caution', at_risk: '✗ At Risk', ready: '🏆 Payout Ready' };
   const sc = statusColors[s.status];
   const sl = statusLabels[s.status];
-  const tPct = Math.min(Math.round(s.targetProg*100), 100);
-  const dPct = Math.min(Math.round(s.ddProg*100), 100);
-  const avgPerDay = s.tradingDays ? s.pnl / s.tradingDays : 0;
-  const remaining = acc.profit_target - s.pnl;
-  const estDays = avgPerDay > 0 ? Math.ceil(remaining / avgPerDay) : null;
+  const tPct  = Math.min(Math.round(s.targetProg * 100), 100);
+  const dPct  = Math.min(Math.round(s.ddProg * 100), 100);
+  const ddCol = dPct < 30 ? 'var(--red)' : dPct < 55 ? 'var(--yellow)' : 'var(--accent)';
 
-  el.innerHTML =
-    // Header
-    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">' +
-      '<div>' +
-        '<div style="font-family:Outfit,sans-serif;font-size:18px;font-weight:700">' + acc.nickname + '</div>' +
-        '<div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted)">' + acc.firm + ' · $' + acc.size.toLocaleString() + ' account · Started ' + (acc.start_date || '—') + '</div>' +
-      '</div>' +
-      '<div style="display:flex;gap:8px;align-items:center">' +
-        '<div class="acc-status-badge" style="background:' + sc + '20;color:' + sc + '">' + sl + '</div>' +
-        '<button id="editAccBtn" style="background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:6px 12px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;cursor:pointer">✏ Edit</button>' +
-      '</div>' +
-    '</div>' +
-    // Stats
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px">' +
-      renderAccStat((s.pnl>=0?'+$':'-$')+Math.abs(s.pnl).toFixed(2), 'Net P&L', s.pnl>0?'var(--accent)':s.pnl<0?'var(--red)':'var(--muted)') +
-      renderAccStat('$'+s.equity.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}), 'Current Equity', 'var(--text)') +
-      renderAccStat('$'+s.floor.toFixed(2), 'DD Floor', 'var(--red)') +
-      renderAccStat('$'+s.remainingDD.toFixed(2), 'DD Buffer', dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') +
-      renderAccStat(s.tradingDays + (acc.min_trading_days ? ' / ' + acc.min_trading_days : ''), 'Trading Days', s.tradingDays >= (acc.min_trading_days||0) ? 'var(--accent)' : 'var(--yellow)') +
-      renderAccStat(estDays ? estDays + ' days' : '—', 'Est. to Payout', 'var(--muted)') +
-    '</div>' +
-    // Progress bars
-    '<div class="card" style="margin-bottom:20px">' +
-      '<div style="margin-bottom:18px">' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
-          '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Profit Target Progress</span>' +
-          '<span style="font-family:DM Mono,monospace;font-size:13px">' + (s.pnl>=0?'+$':'-$') + Math.abs(s.pnl).toFixed(2) + ' / $' + acc.profit_target.toLocaleString() + ' (' + tPct + '%)</span>' +
-        '</div>' +
-        '<div class="acc-progress-bar" style="height:14px"><div class="acc-progress-fill" style="width:' + tPct + '%;background:var(--accent)"></div></div>' +
-      '</div>' +
-      '<div>' +
-        '<div style="display:flex;justify-content:space-between;margin-bottom:6px">' +
-          '<span style="font-family:Outfit,sans-serif;font-size:13px;font-weight:600">Trailing Drawdown Buffer</span>' +
-          '<span style="font-family:DM Mono,monospace;font-size:13px;color:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '">$' + s.remainingDD.toFixed(2) + ' / $' + acc.trailing_drawdown.toLocaleString() + ' (' + dPct + '% safe)</span>' +
-        '</div>' +
-        '<div class="acc-progress-bar" style="height:14px"><div class="acc-progress-fill" style="width:' + dPct + '%;background:' + (dPct<30?'var(--red)':dPct<50?'var(--yellow)':'var(--accent)') + '"></div></div>' +
-      '</div>' +
-    '</div>' +
-    // Equity chart
-    '<div class="card" style="margin-bottom:20px">' +
-      '<div class="card-title" style="margin-bottom:16px">Equity Curve <span class="card-title-right">vs DD Floor</span></div>' +
-      '<canvas id="accEquityChart" height="120"></canvas>' +
-    '</div>' +
-    // Rules
-    '<div class="card">' +
-      '<div class="card-title" style="margin-bottom:14px">Account Rules</div>' +
-      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">' +
-        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Profit Target</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--accent)">$' + acc.profit_target.toLocaleString() + '</div></div>' +
-        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Trailing DD</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.trailing_drawdown.toLocaleString() + '</div></div>' +
-        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Max Daily Loss</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700;color:var(--red)">$' + acc.max_daily_loss.toLocaleString() + '</div></div>' +
-        '<div><div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px">Min Trading Days</div><div style="font-family:DM Mono,monospace;font-size:15px;font-weight:700">' + (acc.min_trading_days||'—') + '</div></div>' +
-      '</div>' +
-    '</div>';
+  const remaining = Math.max(acc.profit_target - s.pnl, 0);
+  const daysLeft  = acc.min_trading_days ? Math.max(acc.min_trading_days - s.tradingDays, 0) : 0;
+  // Est. to payout: use avg daily P&L only when positive and at least 2 days of data
+  const avgPerDay = s.tradingDays >= 2 ? s.pnl / s.tradingDays : null;
+  const estDays   = remaining <= 0 ? 0 : (avgPerDay && avgPerDay > 0) ? Math.ceil(remaining / avgPerDay) : null;
+  const estDisplay = remaining <= 0 ? '🎉 Done' : estDays ? '~' + estDays + 'd' : avgPerDay !== null && avgPerDay <= 0 ? 'Losing avg' : s.tradingDays < 2 ? 'Need data' : '—';
+
+  // ── payout readiness score (0-100) ─────────────────────────────
+  const payoutScore = Math.round((tPct * 0.6) + (Math.min(s.tradingDays / (acc.min_trading_days || s.tradingDays || 1), 1) * 100 * 0.4));
+  const payoutCol   = payoutScore >= 80 ? '#4da8ff' : payoutScore >= 50 ? 'var(--accent)' : 'var(--muted)';
+
+  el.innerHTML = `
+    <!-- HEADER ──────────────────────────────────────── -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px">${acc.nickname}</div>
+        <div style="font-family:Outfit,sans-serif;font-size:13px;color:var(--muted);margin-top:3px">
+          ${acc.firm} &nbsp;·&nbsp; $${acc.size.toLocaleString()} account &nbsp;·&nbsp; Started ${acc.start_date || '—'}
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <div class="acc-status-badge" style="background:${sc}20;color:${sc};font-size:13px;padding:7px 16px">${sl}</div>
+        <button id="editAccBtn" style="background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:9px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">✏ Edit</button>
+      </div>
+    </div>
+
+    <!-- TOP KPI CARDS ───────────────────────────────── -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+      ${renderAccStat((s.pnl>=0?'+$':'-$')+Math.abs(s.pnl).toFixed(2), 'Net P&L', s.pnl>0?'var(--accent)':s.pnl<0?'var(--red)':'var(--muted)')}
+      ${renderAccStat('$'+s.equity.toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}), 'Equity', 'var(--text)')}
+      ${renderAccStat('$'+s.remainingDD.toFixed(0), 'DD Buffer', ddCol)}
+      ${renderAccStat(s.tradingDays + (acc.min_trading_days?' / '+acc.min_trading_days:''), 'Trading Days', s.tradingDays>=(acc.min_trading_days||0)?'var(--accent)':'var(--yellow)')}
+      ${renderAccStat(estDisplay, 'Est. to Payout', remaining<=0?'var(--accent)':estDays&&estDays<=10?'var(--accent)':avgPerDay&&avgPerDay<=0?'var(--red)':'var(--muted)')}
+    </div>
+
+    <!-- MAIN CONTENT GRID ───────────────────────────── -->
+    <div style="display:grid;grid-template-columns:1fr 320px;gap:16px;margin-bottom:20px">
+
+      <!-- LEFT: Payout Progress + Equity Chart -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- PAYOUT PROGRESS CARD -->
+        <div class="card">
+          <div class="card-title">🏆 Payout Progress</div>
+
+          <!-- Profit Target bar -->
+          <div style="margin-bottom:20px">
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px">
+              <div>
+                <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase">Profit Target</div>
+                <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:var(--accent);margin-top:2px">
+                  ${tPct}%
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:var(--text2)">${s.pnl>=0?'+$':'-$'}${Math.abs(s.pnl).toFixed(0)}</div>
+                <div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">of $${acc.profit_target.toLocaleString()} target</div>
+              </div>
+            </div>
+            <div style="background:var(--border);border-radius:8px;height:18px;overflow:hidden;position:relative">
+              <div style="width:${tPct}%;height:100%;background:linear-gradient(90deg,#00a96e,#00d68f);border-radius:8px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);position:relative">
+                ${tPct > 8 ? `<div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:Outfit,sans-serif;font-size:10px;font-weight:700;color:#000">${tPct}%</div>` : ''}
+              </div>
+              ${acc.min_trading_days ? `<div style="position:absolute;top:0;bottom:0;left:${Math.min(Math.round(s.tradingDays/acc.min_trading_days*100),100)}%;width:2px;background:rgba(255,255,255,0.3)" title="Days progress"></div>` : ''}
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">
+              <span>$0</span>
+              ${remaining <= 0 ? '<span style="color:var(--accent);font-weight:700">🎉 Target reached!</span>' : `<span style="color:var(--text2);font-weight:600">$${remaining.toFixed(0)} to go${estDays ? ' · ' + estDisplay : ''}</span>`}
+              <span>$${acc.profit_target.toLocaleString()}</span>
+            </div>
+          </div>
+
+          <!-- Trailing DD bar -->
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px">
+              <div>
+                <div style="font-family:Outfit,sans-serif;font-size:12px;font-weight:700;color:var(--muted);letter-spacing:0.5px;text-transform:uppercase">Trailing Drawdown Buffer</div>
+                <div style="font-family:Outfit,sans-serif;font-size:22px;font-weight:800;letter-spacing:-0.5px;color:${ddCol};margin-top:2px">
+                  ${dPct}% safe
+                </div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${ddCol}">$${s.remainingDD.toFixed(0)} left</div>
+                <div style="font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">of $${acc.trailing_drawdown.toLocaleString()} limit</div>
+              </div>
+            </div>
+            <div style="background:var(--border);border-radius:8px;height:18px;overflow:hidden">
+              <div style="width:${dPct}%;height:100%;background:${dPct<30?'linear-gradient(90deg,#c02040,#f0435a)':dPct<55?'linear-gradient(90deg,#c89000,#f5c842)':'linear-gradient(90deg,#009060,#00d68f)'};border-radius:8px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);position:relative">
+                ${dPct > 8 ? `<div style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:Outfit,sans-serif;font-size:10px;font-weight:700;color:#000">${dPct}%</div>` : ''}
+              </div>
+            </div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;font-family:Outfit,sans-serif;font-size:11px;color:var(--muted)">
+              <span style="color:var(--red)">$0 — Blown</span>
+              <span>Floor: $${s.floor.toFixed(0)}</span>
+              <span style="color:var(--accent)">$${acc.trailing_drawdown.toLocaleString()} — Full</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- EQUITY CHART -->
+        <div class="card">
+          <div class="card-title">Equity Curve <span class="card-title-right">vs DD Floor & Target</span></div>
+          <canvas id="accEquityChart" height="130"></canvas>
+        </div>
+      </div>
+
+      <!-- RIGHT: Payout Checklist + Rules -->
+      <div style="display:flex;flex-direction:column;gap:16px">
+
+        <!-- PAYOUT CHECKLIST -->
+        <div class="card">
+          <div class="card-title">Payout Checklist</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+
+            <!-- Item: Profit Target -->
+            <div class="pa-check-item" style="--ok:${tPct>=100?1:0}">
+              <div class="pa-check-icon" style="background:${tPct>=100?'rgba(0,214,143,0.15)':'var(--border)'};color:${tPct>=100?'var(--accent)':'var(--muted)'}">
+                ${tPct>=100?'✓':'○'}
+              </div>
+              <div style="flex:1">
+                <div class="pa-check-label">Profit Target</div>
+                <div class="pa-check-sub">${tPct>=100?'Reached! +$'+s.pnl.toFixed(0):'$'+remaining.toFixed(0)+' remaining ('+tPct+'%)'}</div>
+              </div>
+            </div>
+
+            <!-- Item: Min Trading Days -->
+            <div class="pa-check-item">
+              <div class="pa-check-icon" style="background:${s.tradingDays>=(acc.min_trading_days||0)?'rgba(0,214,143,0.15)':'var(--border)'};color:${s.tradingDays>=(acc.min_trading_days||0)?'var(--accent)':'var(--muted)'}">
+                ${s.tradingDays>=(acc.min_trading_days||0)?'✓':'○'}
+              </div>
+              <div style="flex:1">
+                <div class="pa-check-label">Min Trading Days</div>
+                <div class="pa-check-sub">${s.tradingDays} / ${acc.min_trading_days||'—'} days${daysLeft>0?' · '+daysLeft+' to go':s.tradingDays>=(acc.min_trading_days||0)?' · Done!':''}</div>
+              </div>
+            </div>
+
+            <!-- Item: No Daily Loss Violations -->
+            <div class="pa-check-item">
+              <div class="pa-check-icon" style="background:${dPct>0?'rgba(0,214,143,0.15)':'rgba(240,67,90,0.15)'};color:${dPct>0?'var(--accent)':'var(--red)'}">
+                ${dPct>0?'✓':'✗'}
+              </div>
+              <div style="flex:1">
+                <div class="pa-check-label">Account Active</div>
+                <div class="pa-check-sub">${dPct>0?'DD buffer intact · $'+s.remainingDD.toFixed(0)+' safe':'Account blown!'}</div>
+              </div>
+            </div>
+
+            <!-- Item: Consistency -->
+            <div class="pa-check-item">
+              <div class="pa-check-icon" style="background:${payoutScore>=80?'rgba(77,168,255,0.15)':'var(--border)'};color:${payoutScore>=80?'#4da8ff':'var(--muted)'}">
+                ${payoutScore>=80?'🏆':'○'}
+              </div>
+              <div style="flex:1">
+                <div class="pa-check-label">Ready for Payout</div>
+                <div class="pa-check-sub">${payoutScore>=80?'All conditions met!':'Score: '+payoutScore+'/100'}</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ACCOUNT RULES -->
+        <div class="card">
+          <div class="card-title">Account Rules</div>
+          <div style="display:flex;flex-direction:column;gap:0">
+            <div class="pa-rule-row">
+              <span class="pa-rule-label">Account Size</span>
+              <span class="pa-rule-val" style="color:var(--text2)">$${acc.size.toLocaleString()}</span>
+            </div>
+            <div class="pa-rule-row">
+              <span class="pa-rule-label">Profit Target</span>
+              <span class="pa-rule-val" style="color:var(--accent)">$${acc.profit_target.toLocaleString()}</span>
+            </div>
+            <div class="pa-rule-row">
+              <span class="pa-rule-label">Trailing Drawdown</span>
+              <span class="pa-rule-val" style="color:var(--red)">$${acc.trailing_drawdown.toLocaleString()}</span>
+            </div>
+            <div class="pa-rule-row">
+              <span class="pa-rule-label">Max Daily Loss</span>
+              <span class="pa-rule-val" style="color:var(--red)">$${acc.max_daily_loss.toLocaleString()}</span>
+            </div>
+            <div class="pa-rule-row" style="border-bottom:none">
+              <span class="pa-rule-label">Min Trading Days</span>
+              <span class="pa-rule-val" style="color:var(--text2)">${acc.min_trading_days || '—'}</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>`;
 
   // Wire up edit button
   document.getElementById('editAccBtn').onclick = () => openEditAccountModal(acc.id);
