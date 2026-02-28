@@ -4085,7 +4085,7 @@ function noTradeDayRow(n) {
   const detailId = `ntdetail-${n.date}`;
   const mainRow = `<tr class="trade-main-row no-trade-history-row" onclick="toggleTradeDetail('${detailId}', this)" style="opacity:0.7">
     <td class="mono" style="font-size:11px;white-space:nowrap;color:var(--muted)">${ds}</td>
-    <td colspan="6" style="font-family:Outfit,sans-serif;font-size:12px;color:var(--muted)">
+    <td colspan="7" style="font-family:Outfit,sans-serif;font-size:12px;color:var(--muted)">
       <span style="background:rgba(240,67,90,0.12);color:var(--red);border-radius:5px;padding:2px 8px;font-weight:600;font-size:11px;margin-right:8px">NO TRADE</span>
       ${n.reason ? `<span style="color:var(--text2)">${n.reason}</span>` : ''}
     </td>
@@ -4096,7 +4096,7 @@ function noTradeDayRow(n) {
     </td>
   </tr>`;
   const detailRow = `<tr class="trade-detail-row">
-    <td colspan="9">
+    <td colspan="10">
       <div class="trade-detail-inner" id="${detailId}">
         <div class="trade-detail-notes">
           <div class="trade-detail-label">📋 Reason</div>
