@@ -8,7 +8,138 @@
 <title>GALT — Trade Journal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js">
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM STRATEGIES
+// ═══════════════════════════════════════════════════════════════
+let customStrategies = [];
+let editingStratId   = null;
+
+async function loadCustomStrategies() {
+  try {
+    const rows = await sbFetch('custom_strategies?user_id=eq.' + currentUser.id + '&order=created_at.asc');
+    customStrategies = rows.map(r => ({ id: r.id, name: r.name, desc: r.description || '' }));
+  } catch(e) {
+    console.warn('Could not load custom strategies:', e.message);
+    customStrategies = [];
+  }
+  loadCustomStrategies();
+}
+
+function toggleAddStrategyForm(prefillName, prefillDesc, editId) {
+  const form = document.getElementById('stratAddForm');
+  const btn  = document.getElementById('addStratBtn');
+  const isOpen = form.style.display !== 'none';
+
+  if (isOpen && !prefillName) {
+    form.style.display = 'none';
+    btn.textContent = '+ Add Strategy';
+    editingStratId = null;
+    document.getElementById('strat-name-input').value = '';
+    document.getElementById('strat-desc-input').value = '';
+    return;
+  }
+
+  form.style.display = 'flex';
+  btn.textContent = '✕ Cancel';
+  editingStratId = editId || null;
+  if (prefillName !== undefined) {
+    document.getElementById('strat-name-input').value = prefillName || '';
+    document.getElementById('strat-desc-input').value = prefillDesc || '';
+  }
+  document.getElementById('strat-name-input').focus();
+}
+
+async function saveCustomStrategy() {
+  const name = document.getElementById('strat-name-input').value.trim();
+  const desc = document.getElementById('strat-desc-input').value.trim();
+  if (!name) { document.getElementById('strat-name-input').focus(); return; }
+
+  const saveBtn = document.querySelector('#stratAddForm button:last-child');
+  if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
+
+  try {
+    if (editingStratId) {
+      await sbFetch('custom_strategies?id=eq.' + editingStratId, {
+        method: 'PATCH',
+        body: JSON.stringify({ name, description: desc })
+      });
+    } else {
+      await sbFetch('custom_strategies', {
+        method: 'POST',
+        body: JSON.stringify({ name, description: desc, user_id: currentUser.id })
+      });
+    }
+    await loadCustomStrategies();
+    toggleAddStrategyForm(); // close form
+  } catch(e) {
+    alert('Error saving strategy: ' + e.message);
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'Save Strategy'; saveBtn.disabled = false; }
+  }
+}
+
+async function deleteCustomStrategy(id) {
+  if (!confirm('Delete this strategy?')) return;
+  try {
+    await sbFetch('custom_strategies?id=eq.' + id, { method: 'DELETE' });
+    await loadCustomStrategies();
+  } catch(e) {
+    alert('Error deleting strategy: ' + e.message);
+  }
+}
+
+function renderStrategyGrid() {
+  const el = document.getElementById('stratGrid');
+  if (!el) return;
+
+  if (!customStrategies.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:8px 0;grid-column:1/-1">No custom strategies yet. Click "+ Add Strategy" to create your first one.</div>';
+    return;
+  }
+
+  el.innerHTML = customStrategies.map(s => `
+    <div class="strat-card">
+      <div class="strat-card-actions">
+        <button class="strat-card-btn edit" onclick="toggleAddStrategyForm(${JSON.stringify(s.name)}, ${JSON.stringify(s.desc||'')}, ${JSON.stringify(s.id)})">✏</button>
+        <button class="strat-card-btn" onclick="deleteCustomStrategy(${JSON.stringify(s.id)})">✕</button>
+      </div>
+      <div class="strat-custom-badge">CUSTOM</div>
+      <div class="strat-card-name">${s.name}</div>
+      ${s.desc ? `<div class="strat-card-desc">${s.desc}</div>` : '<div class="strat-card-desc" style="font-style:italic">No description</div>'}
+    </div>
+  `).join('');
+}
+
+function refreshCustomStrategyDropdowns() {
+  ['f-strategy', 'sf-strategy'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+
+    const existing = sel.querySelector('optgroup[label="My Strategies"]');
+    if (existing) existing.remove();
+
+    if (!customStrategies.length) return;
+
+    const grp = document.createElement('optgroup');
+    grp.label = 'My Strategies';
+    customStrategies.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      opt.textContent = '★ ' + s.name;
+      grp.appendChild(opt);
+    });
+
+    const firstOpt = sel.querySelector('option');
+    if (firstOpt && firstOpt.nextSibling) {
+      sel.insertBefore(grp, firstOpt.nextSibling);
+    } else {
+      sel.appendChild(grp);
+    }
+  });
+}
+
+</script>
 <style>
   :root {
     --bg:         #090b0e;
@@ -1708,6 +1839,79 @@
     font-size: 14px; font-weight: 700;
   }
 
+
+  /* ── Strategy Manager ── */
+  .strat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+  }
+  .strat-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    transition: border-color 0.15s;
+    position: relative;
+  }
+  .strat-card:hover { border-color: var(--border2); }
+  .strat-card-name {
+    font-family: 'Outfit', sans-serif;
+    font-size: 14px; font-weight: 700;
+    color: var(--text); margin-bottom: 6px;
+    padding-right: 52px;
+  }
+  .strat-card-desc {
+    font-family: 'Outfit', sans-serif;
+    font-size: 12px; color: var(--muted);
+    line-height: 1.6; white-space: pre-wrap;
+  }
+  .strat-card-actions {
+    position: absolute; top: 12px; right: 12px;
+    display: flex; gap: 6px;
+  }
+  .strat-card-btn {
+    background: none; border: 1px solid var(--border2);
+    border-radius: 6px; color: var(--muted);
+    font-size: 11px; padding: 3px 8px;
+    cursor: pointer; transition: all 0.12s;
+    font-family: 'Outfit', sans-serif; font-weight: 500;
+  }
+  .strat-card-btn:hover { border-color: var(--red); color: var(--red); }
+  .strat-card-btn.edit:hover { border-color: var(--accent); color: var(--accent); }
+  .strat-custom-badge {
+    display: inline-block;
+    background: rgba(0,214,143,0.1);
+    color: var(--accent);
+    border: 1px solid rgba(0,214,143,0.2);
+    border-radius: 5px;
+    font-size: 10px; font-weight: 700;
+    padding: 1px 7px; margin-bottom: 8px;
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: 0.3px;
+  }
+  .strat-add-form {
+    background: var(--bg);
+    border: 1px dashed var(--border2);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .strat-add-form input, .strat-add-form textarea {
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    border-radius: 9px; padding: 10px 14px;
+    color: var(--text); font-family: 'Outfit', sans-serif;
+    font-size: 14px; outline: none; width: 100%;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .strat-add-form input:focus, .strat-add-form textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(0,214,143,0.1);
+  }
+  .strat-add-form textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
+
 </style>
 </head>
 <body>
@@ -2196,6 +2400,28 @@
 
   <!-- ▸ SETUP REPORT ──────────────────────────────── -->
   <div id="tab-setups" class="tab-content">
+
+    <!-- MY STRATEGIES ──────────────────────────── -->
+    <div class="card">
+      <div class="card-title">
+        My Strategies
+        <button onclick="toggleAddStrategyForm()" id="addStratBtn" style="background:var(--accent);color:#000;border:none;padding:6px 16px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s">+ Add Strategy</button>
+      </div>
+
+      <!-- Add form (hidden by default) -->
+      <div class="strat-add-form" id="stratAddForm" style="display:none;margin-bottom:16px">
+        <input type="text" id="strat-name-input" placeholder="Strategy name (e.g. VWAP Fade, ICT Silver Bullet…)" maxlength="60">
+        <textarea id="strat-desc-input" placeholder="Describe your setup: entry rules, conditions, timeframe, confluences required…" rows="3"></textarea>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button onclick="toggleAddStrategyForm()" style="background:none;border:1px solid var(--border2);color:var(--muted);padding:8px 16px;border-radius:8px;font-family:Outfit,sans-serif;font-size:13px;cursor:pointer">Cancel</button>
+          <button onclick="saveCustomStrategy()" style="background:var(--accent);color:#000;border:none;padding:8px 20px;border-radius:8px;font-family:Outfit,sans-serif;font-size:13px;font-weight:700;cursor:pointer">Save Strategy</button>
+        </div>
+      </div>
+
+      <div class="strat-grid" id="stratGrid">
+        <div style="color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:8px 0;grid-column:1/-1">No custom strategies yet. Click "+ Add Strategy" to create your first one.</div>
+      </div>
+    </div>
 
     <div class="card">
       <div class="card-title">
@@ -6144,6 +6370,137 @@ function saveDayRecap() {
   // Visual feedback
   const btn = document.querySelector('.day-recap-section button');
   if (btn) { btn.textContent = 'Saved ✓'; setTimeout(()=>{ btn.textContent='Save'; },1500); }
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+// CUSTOM STRATEGIES
+// ═══════════════════════════════════════════════════════════════
+let customStrategies = [];
+let editingStratId   = null;
+
+async function loadCustomStrategies() {
+  try {
+    const rows = await sbFetch('custom_strategies?user_id=eq.' + currentUser.id + '&order=created_at.asc');
+    customStrategies = rows.map(r => ({ id: r.id, name: r.name, desc: r.description || '' }));
+  } catch(e) {
+    console.warn('Could not load custom strategies:', e.message);
+    customStrategies = [];
+  }
+  loadCustomStrategies();
+}
+
+function toggleAddStrategyForm(prefillName, prefillDesc, editId) {
+  const form = document.getElementById('stratAddForm');
+  const btn  = document.getElementById('addStratBtn');
+  const isOpen = form.style.display !== 'none';
+
+  if (isOpen && !prefillName) {
+    form.style.display = 'none';
+    btn.textContent = '+ Add Strategy';
+    editingStratId = null;
+    document.getElementById('strat-name-input').value = '';
+    document.getElementById('strat-desc-input').value = '';
+    return;
+  }
+
+  form.style.display = 'flex';
+  btn.textContent = '✕ Cancel';
+  editingStratId = editId || null;
+  if (prefillName !== undefined) {
+    document.getElementById('strat-name-input').value = prefillName || '';
+    document.getElementById('strat-desc-input').value = prefillDesc || '';
+  }
+  document.getElementById('strat-name-input').focus();
+}
+
+async function saveCustomStrategy() {
+  const name = document.getElementById('strat-name-input').value.trim();
+  const desc = document.getElementById('strat-desc-input').value.trim();
+  if (!name) { document.getElementById('strat-name-input').focus(); return; }
+
+  const saveBtn = document.querySelector('#stratAddForm button:last-child');
+  if (saveBtn) { saveBtn.textContent = 'Saving…'; saveBtn.disabled = true; }
+
+  try {
+    if (editingStratId) {
+      await sbFetch('custom_strategies?id=eq.' + editingStratId, {
+        method: 'PATCH',
+        body: JSON.stringify({ name, description: desc })
+      });
+    } else {
+      await sbFetch('custom_strategies', {
+        method: 'POST',
+        body: JSON.stringify({ name, description: desc, user_id: currentUser.id })
+      });
+    }
+    await loadCustomStrategies();
+    toggleAddStrategyForm(); // close form
+  } catch(e) {
+    alert('Error saving strategy: ' + e.message);
+  } finally {
+    if (saveBtn) { saveBtn.textContent = 'Save Strategy'; saveBtn.disabled = false; }
+  }
+}
+
+async function deleteCustomStrategy(id) {
+  if (!confirm('Delete this strategy?')) return;
+  try {
+    await sbFetch('custom_strategies?id=eq.' + id, { method: 'DELETE' });
+    await loadCustomStrategies();
+  } catch(e) {
+    alert('Error deleting strategy: ' + e.message);
+  }
+}
+
+function renderStrategyGrid() {
+  const el = document.getElementById('stratGrid');
+  if (!el) return;
+
+  if (!customStrategies.length) {
+    el.innerHTML = '<div style="color:var(--muted);font-family:Outfit,sans-serif;font-size:13px;padding:8px 0;grid-column:1/-1">No custom strategies yet. Click "+ Add Strategy" to create your first one.</div>';
+    return;
+  }
+
+  el.innerHTML = customStrategies.map(s => `
+    <div class="strat-card">
+      <div class="strat-card-actions">
+        <button class="strat-card-btn edit" onclick="toggleAddStrategyForm(${JSON.stringify(s.name)}, ${JSON.stringify(s.desc||'')}, ${JSON.stringify(s.id)})">✏</button>
+        <button class="strat-card-btn" onclick="deleteCustomStrategy(${JSON.stringify(s.id)})">✕</button>
+      </div>
+      <div class="strat-custom-badge">CUSTOM</div>
+      <div class="strat-card-name">${s.name}</div>
+      ${s.desc ? `<div class="strat-card-desc">${s.desc}</div>` : '<div class="strat-card-desc" style="font-style:italic">No description</div>'}
+    </div>
+  `).join('');
+}
+
+function refreshCustomStrategyDropdowns() {
+  ['f-strategy', 'sf-strategy'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+
+    const existing = sel.querySelector('optgroup[label="My Strategies"]');
+    if (existing) existing.remove();
+
+    if (!customStrategies.length) return;
+
+    const grp = document.createElement('optgroup');
+    grp.label = 'My Strategies';
+    customStrategies.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.name;
+      opt.textContent = '★ ' + s.name;
+      grp.appendChild(opt);
+    });
+
+    const firstOpt = sel.querySelector('option');
+    if (firstOpt && firstOpt.nextSibling) {
+      sel.insertBefore(grp, firstOpt.nextSibling);
+    } else {
+      sel.appendChild(grp);
+    }
+  });
 }
 
 </script>
