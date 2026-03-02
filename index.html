@@ -139,6 +139,8 @@ function refreshCustomStrategyDropdowns() {
   });
 }
 
+
+
 </script>
 <style>
   :root {
@@ -1912,6 +1914,52 @@ function refreshCustomStrategyDropdowns() {
   }
   .strat-add-form textarea { resize: vertical; min-height: 80px; line-height: 1.6; }
 
+
+  /* ── Account Filter ── */
+  .acc-filter-wrap { position: relative; }
+  .acc-filter-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 9px; padding: 8px 14px;
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 600;
+    color: var(--text2); cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .acc-filter-btn:hover { border-color: var(--accent); color: var(--text); }
+  .acc-filter-btn.has-filter { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+  .acc-filter-dropdown {
+    position: absolute; top: calc(100% + 8px); right: 0;
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: 12px; padding: 8px; min-width: 230px; z-index: 100;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.45); display: none;
+  }
+  .acc-filter-dropdown.open { display: block; }
+  .acc-filter-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    transition: background 0.1s;
+    font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+    color: var(--text2); user-select: none;
+  }
+  .acc-filter-option:hover { background: rgba(255,255,255,0.04); }
+  .acc-filter-option.sel { color: var(--text); }
+  .acc-filter-check {
+    width: 16px; height: 16px; border-radius: 4px;
+    border: 1.5px solid var(--border2); flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; transition: all 0.12s;
+  }
+  .acc-filter-option.sel .acc-filter-check { background: var(--accent); border-color: var(--accent); color: #000; }
+  .acc-filter-sep { height: 1px; background: var(--border); margin: 6px 0; }
+  .acc-filter-footer { padding: 4px 2px 2px; display: flex; gap: 6px; }
+  .acc-filter-footer button {
+    flex: 1; padding: 7px; border-radius: 7px;
+    font-family: 'Outfit', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border2); background: none; color: var(--muted);
+    transition: all 0.12s;
+  }
+  .acc-filter-footer button.apply { background: var(--accent); color: #000; border-color: var(--accent); }
+  .acc-filter-footer button:not(.apply):hover { color: var(--text); border-color: var(--text); }
+
 </style>
 </head>
 <body>
@@ -2120,6 +2168,21 @@ function refreshCustomStrategyDropdowns() {
           <div class="mode-toggle-thumb"></div>
         </div>
         <span class="mode-switch-label" id="modeLabel">Dark</span>
+      </div>
+      <div class="acc-filter-wrap" id="accFilterWrap" style="display:none">
+        <button class="acc-filter-btn" id="accFilterBtn" onclick="toggleAccFilter()">
+          <span id="accFilterDot" style="width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0"></span>
+          <span id="accFilterLabel">All Accounts</span>
+          <span style="opacity:0.4;font-size:10px;margin-left:2px">&#9660;</span>
+        </button>
+        <div class="acc-filter-dropdown" id="accFilterDropdown">
+          <div id="accFilterOptions"></div>
+          <div class="acc-filter-sep"></div>
+          <div class="acc-filter-footer">
+            <button onclick="clearAccFilter()">Clear</button>
+            <button class="apply" onclick="applyAccFilter()">Apply</button>
+          </div>
+        </div>
       </div>
       <div class="date-range-wrap" id="dateRangeWrap">
         <button class="btn-daterange" onclick="toggleDateRange()" id="dateRangeBtn">
@@ -4256,6 +4319,7 @@ async function bootApp() {
   initDailyBarChart();
   initPerTradeChart();
   render();
+  buildAccFilterDropdown();
 
   setTimeout(() => {
     document.getElementById('ringFill').style.transition = 'stroke-dashoffset 1.2s cubic-bezier(0.4,0,0.2,1)';
@@ -4541,6 +4605,8 @@ function updatePerTradeChart() {
 
 // ─────────────── DATE RANGE FILTER ─────────────────────────────
 let drFrom = null, drTo = null;
+let selectedAccFilter = []; // empty = all
+let pendingAccFilter  = [];
 
 function toggleDateRange() {
   const picker = document.getElementById('dateRangePicker');
@@ -4613,11 +4679,11 @@ function clearDateRange() {
 }
 
 function filteredTrades() {
-  if (!drFrom && !drTo) return trades;
   return trades.filter(t => {
     const d = t.datetime.slice(0, 10);
     if (drFrom && d < drFrom) return false;
     if (drTo   && d > drTo)   return false;
+    if (selectedAccFilter.length > 0 && !selectedAccFilter.includes(t.account_id)) return false;
     return true;
   });
 }
@@ -6502,6 +6568,114 @@ function refreshCustomStrategyDropdowns() {
     }
   });
 }
+
+
+// ═══════════════════════════════════════════════════════════════
+// ACCOUNT FILTER (HEADER)
+// ═══════════════════════════════════════════════════════════════
+function buildAccFilterDropdown() {
+  const wrap = document.getElementById('accFilterWrap');
+  if (!wrap) return;
+  if (!propAccounts || !propAccounts.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const opts = document.getElementById('accFilterOptions');
+  if (!opts) return;
+  opts.innerHTML = '';
+
+  const noAccCount = trades.filter(t => !t.account_id).length;
+  if (noAccCount > 0) {
+    opts.appendChild(makeAccFilterOpt(null, 'Personal / No Account', 'var(--muted)'));
+  }
+  propAccounts.forEach(a => {
+    const s = calcTrailingDrawdown(a);
+    const col = s.status==='ready'?'#4da8ff':s.status==='at_risk'?'var(--red)':s.status==='caution'?'var(--yellow)':'var(--accent)';
+    opts.appendChild(makeAccFilterOpt(a.id, a.nickname + ' <small style="color:var(--muted)">' + a.firm + '</small>', col));
+  });
+}
+
+function makeAccFilterOpt(id, label, dotCol) {
+  const div = document.createElement('div');
+  const isSel = pendingAccFilter.includes(id);
+  div.className = 'acc-filter-option' + (isSel ? ' sel' : '');
+  div.innerHTML =
+    '<div class="acc-filter-check">' + (isSel ? '&#10003;' : '') + '</div>' +
+    '<span style="display:flex;align-items:center;gap:7px">' +
+      '<span style="width:7px;height:7px;border-radius:50%;background:' + dotCol + ';flex-shrink:0;display:inline-block"></span>' +
+      label +
+    '</span>';
+  div.onclick = () => {
+    const idx = pendingAccFilter.indexOf(id);
+    if (idx >= 0) {
+      pendingAccFilter.splice(idx, 1);
+      div.classList.remove('sel');
+      div.querySelector('.acc-filter-check').innerHTML = '';
+    } else {
+      pendingAccFilter.push(id);
+      div.classList.add('sel');
+      div.querySelector('.acc-filter-check').innerHTML = '&#10003;';
+    }
+  };
+  return div;
+}
+
+function toggleAccFilter() {
+  const dd = document.getElementById('accFilterDropdown');
+  if (!dd.classList.contains('open')) {
+    pendingAccFilter = [...selectedAccFilter];
+    buildAccFilterDropdown();
+  }
+  dd.classList.toggle('open');
+}
+
+function applyAccFilter() {
+  selectedAccFilter = [...pendingAccFilter];
+  document.getElementById('accFilterDropdown').classList.remove('open');
+  updateAccFilterLabel();
+  render();
+}
+
+function clearAccFilter() {
+  selectedAccFilter = [];
+  pendingAccFilter  = [];
+  document.getElementById('accFilterDropdown').classList.remove('open');
+  updateAccFilterLabel();
+  render();
+}
+
+function updateAccFilterLabel() {
+  const btn   = document.getElementById('accFilterBtn');
+  const label = document.getElementById('accFilterLabel');
+  const dot   = document.getElementById('accFilterDot');
+  if (!btn || !label) return;
+  if (!selectedAccFilter.length) {
+    label.textContent = 'All Accounts';
+    btn.classList.remove('has-filter');
+    if (dot) dot.style.background = 'var(--muted)';
+  } else if (selectedAccFilter.length === 1) {
+    const id = selectedAccFilter[0];
+    if (id === null) {
+      label.textContent = 'Personal';
+    } else {
+      const acc = propAccounts.find(a => a.id === id);
+      label.textContent = acc ? acc.nickname : 'Selected';
+    }
+    btn.classList.add('has-filter');
+    if (dot) dot.style.background = 'var(--accent)';
+  } else {
+    label.textContent = selectedAccFilter.length + ' accounts';
+    btn.classList.add('has-filter');
+    if (dot) dot.style.background = 'var(--accent)';
+  }
+}
+
+document.addEventListener('click', function(e) {
+  const wrap = document.getElementById('accFilterWrap');
+  if (wrap && !wrap.contains(e.target)) {
+    const dd = document.getElementById('accFilterDropdown');
+    if (dd) dd.classList.remove('open');
+  }
+});
 
 </script>
 </body>
