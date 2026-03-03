@@ -3396,6 +3396,7 @@ function renderSingleAccount(el, acc) {
       <div style="display:flex;gap:8px;align-items:center">
         <div class="acc-status-badge" style="background:${sc}20;color:${sc};font-size:13px;padding:7px 16px">${sl}</div>
         <button id="editAccBtn" style="background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:9px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">✏ Edit</button>
+         <button id="deleteAccBtn" style="background:var(--card);border:1px solid var(--border2);color:var(--muted);padding:7px 14px;border-radius:9px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all 0.15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">🗑 Delete</button>
       </div>
     </div>
 
@@ -3566,6 +3567,7 @@ function renderSingleAccount(el, acc) {
 
   // Wire up edit button
   document.getElementById('editAccBtn').onclick = () => openEditAccountModal(acc.id);
+  document.getElementById('deleteAccBtn').onclick = () => deleteAccount(acc.id, acc.nickname);
 
   // Draw equity chart
   renderAccEquityChart(acc, s);
@@ -3645,6 +3647,21 @@ function openNewAccountModal() {
   document.getElementById('acc-start').value = today.toISOString().split('T')[0];
   document.getElementById('customFirmDiv').style.display = 'none';
   document.getElementById('accountModal').style.display = 'flex';
+}
+
+async function deleteAccount(id, nickname) {
+  if (!confirm('Delete "' + nickname + '"? This will NOT delete your trades, only the account record.')) return;
+  try {
+    await sbFetch('prop_accounts?id=eq.' + id, { method: 'DELETE' });
+    propAccounts = propAccounts.filter(a => a.id !== id);
+    // If deleted account was selected, go to consolidated
+    if (selectedAccountId === id) selectedAccountId = 'consolidated';
+    renderAccountTabBar();
+    renderAccountContent();
+    buildAccFilterDropdown();
+  } catch(e) {
+    alert('Error deleting account: ' + e.message);
+  }
 }
 
 function openEditAccountModal(id) {
